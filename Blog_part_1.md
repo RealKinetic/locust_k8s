@@ -277,9 +277,9 @@ Now that we have our locust server running we can visit http://localhost:8089 in
 
 We can obviously install Locust directly on any machine we'd like. Whether on bare metal, a VM, or in our case we're going to use [Docker](https://www.docker.com/) and [Google Container Engine (GKE)](https://www.docker.com/).
 
-# Google Container Engine
+## Google Container Engine
 
-## Prerequisites
+### Prerequisites
 
 * Google Cloud Platform account
 * Install and setup [Google Cloud SDK](https://cloud.google.com/sdk/)
@@ -294,7 +294,7 @@ Before continuing, you can also set your preferred zone and project:
     $ gcloud config set compute/zone ZONE
     $ gcloud config set project PROJECT-ID
 
-## Deploying our example container
+### Deploying our example container
 
 You can use the directions directly from the [Google Container Engine Quickstart](https://cloud.google.com/container-engine/docs/quickstart) or follow what we have below.
 
