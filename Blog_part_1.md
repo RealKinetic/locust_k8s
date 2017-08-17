@@ -41,7 +41,6 @@ Once you have Python installed we then need to ensure with the Python tools to i
 
 Python leverages Pip to install packages locally. To check if we have pip install open a terminal window and type pip
 
-
     $ pip
 
 You will see something like below if you have pip installed:
