@@ -151,15 +151,11 @@ We can do a quick test by adding 1 user to simulate and 1 for a hatch rate. Then
 
 You should now see messages being sent to the stdout of your example server. In the Locust UI you will see a list of the endpoints being hit. You will see the request counts incrementing for `/` and `/profile`. There should not be failures being logged unless Locust is having issues connecting to your server.
 
-# Deployment
-
-We can obviously install Locust directly on any machine we'd like. Whether on bare metal, a VM, or in our case we're going to use [Docker](https://www.docker.com/) and [Google Container Engine (GKE)](https://www.docker.com/).
-
-## Docker
+# Docker
 
 We're going to build and run our Docker containers locally first so go ahead and install Docker for your environment.
 
-## Docker Environment
+# Docker Environment
 
 We will have two containers running in our scenario. Our example server and locust instace. To support those our locust container being able to communicate with our example server we need to configure a custom docker network. Thankfully this is a simple process.
 
@@ -173,7 +169,7 @@ You can inspect this network with the following command:
 
 Now that we have our network setup let's create our example server container.
 
-### Example Server Container
+## Example Server Container
 
 To build our example server run the following:
 
@@ -217,7 +213,7 @@ Since we exposed and mapped port 8080 you can test that our server is working by
 
 Once you've verified that our example server container is running we can now build and run our locust container. FYI if you run locust locally earlier you can re-run the same tests again now pointing at the container version of our example server with the following `locust -f locustfile.py --host=http://localhost:8080`.
 
-### Locust Container
+## Locust Container
 
 Building and running our locust container is similar to our example server. First we build the container image with the following:
 
@@ -277,6 +273,6 @@ Now that we have our locust server running we can visit http://localhost:8089 in
 
     $ open http://localhost:8089
 
-## Part 1 Complete
+# Part 1 Complete
 
 We now have a working example_server and a Locust file to run against that server. And while Locust is multi-threaded and can create a decent amount of traffic it is limited by your local resources. Even pushing it to a powerful hosted machine is going to hit limitations. The true power of Locust comes in its ability to distribute out over multiple machines. However creating clustered enviornments can be a bit of a pain. In part two we'll walkthrough leveraging Google Compute Enging (Kubernetes) and Locust's distributed mode to give us a maintainable distributed environment to run our load tests from.
