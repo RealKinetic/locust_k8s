@@ -341,7 +341,7 @@ To test via locust once again open locust in a browser http://localhost:8089
 
     $ open http://localhost:8089
 
-To run locust on GKE you can use the exact same process for the example server just replacing it with the locust container image.
+To run locust on GKE you can use the exact same process for the example server just replacing it with the locust container image. You can run it within the same cluster or create a new cluster if you'd like. Obviously in a production enviornment you'd like want to separate your Load tester from your system as you do not want contamenation to get a more realisitc representation.
 
 ### Cleanup
 
