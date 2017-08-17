@@ -29,15 +29,11 @@ Locust runs within a Python environment so we will need to setup Python and it's
 
 To verify that you have Python installed you can open a terminal window and run the following command:
 
-```
-$ python --version
-```
+    $ python --version
 
 If you have a version of Python installed you will see a result simlar to:
 
-```
-Python 2.7.13
-```
+    Python 2.7.13
 
 To run locust you will need either Python 2.7.x or any version of Python 3 above 3.3. If you do not have a Python runtime installed please visit the [Python site](https://www.python.org/downloads/) to download and install for your environment.
 
@@ -46,33 +42,29 @@ Once you have Python installed we then need to ensure with the Python tools to i
 Python leverages Pip to install packages locally. To check if we have pip install open a terminal window and type pip
 
 
-```
-$ pip
-```
+    $ pip
 
 You will see something like below if you have pip installed:
 
-```
-Usage:
-  pip <command> [options]
+    Usage:
+      pip <command> [options]
 
-Commands:
-  install                     Install packages.
-  download                    Download packages.
-  uninstall                   Uninstall packages.
-  freeze                      Output installed packages in requirements format.
-  list                        List installed packages.
-  show                        Show information about installed packages.
-  check                       Verify installed packages have compatible dependencies.
-  search                      Search PyPI for packages.
-  wheel                       Build wheels from your requirements.
-  hash                        Compute hashes of package archives.
-  completion                  A helper command used for command completion.
-  help                        Show help for commands.
+    Commands:
+      install                     Install packages.
+      download                    Download packages.
+      uninstall                   Uninstall packages.
+      freeze                      Output installed packages in requirements format.
+      list                        List installed packages.
+      show                        Show information about installed packages.
+      check                       Verify installed packages have compatible dependencies.
+      search                      Search PyPI for packages.
+      wheel                       Build wheels from your requirements.
+      hash                        Compute hashes of package archives.
+      completion                  A helper command used for command completion.
+      help                        Show help for commands.
 
-General Options:
-...
-```
+    General Options:
+    ...
 
 If you do not have pip install please visit the [Pip installation documentation](https://pip.pypa.io/en/stable/installing/) to install.
 
@@ -80,9 +72,7 @@ Now that we have a working version of Python and pip we can go ahead with the Lo
 
 Run this command to install locust ([alternative methods here](http://docs.locust.io/en/latest/installation.html)):
 
-```
-$ pip install locustio
-```
+    $ pip install locustio
 
 Now that we have Locust installed we can move on to running a Locust script which requires us to have a server to hit.
 
@@ -94,15 +84,11 @@ Here is the Go code behind the file. It is also included in the repo if you woul
 
 Once you have the binary or repo pulled down go to that directly:
 
-```
-$ cd locust_k8s
-```
+    $ cd locust_k8s
 
 And run the following commadn to run the server:
 
-```
-$ ./example_server
-```
+    $ ./example_server
 
 This server will sit on port `8080`. You can test it by visiting http://localhost:8080. You should see a page with:
 
@@ -123,30 +109,28 @@ You can use the `locustfile.py` in our example repo or create said file.
 
 Here's the full set of code that you will need to add to `locustfile.py`:
 
-```
-from locust import HttpLocust, TaskSet, task
+    from locust import HttpLocust, TaskSet, task
 
-class UserBehavior(TaskSet):
-    def on_start(self):
-        """ on_start is called when a Locust start before any task is scheduled """
-        self.login()
+    class UserBehavior(TaskSet):
+        def on_start(self):
+            """ on_start is called when a Locust start before any task is scheduled """
+            self.login()
 
-    def login(self):
-        self.client.post("/login", {"username":"ellen_key", "password":"education"})
+        def login(self):
+            self.client.post("/login", {"username":"ellen_key", "password":"education"})
 
-    @task(2)
-    def index(self):
-        self.client.get("/")
+        @task(2)
+        def index(self):
+            self.client.get("/")
 
-    @task(1)
-    def profile(self):
-        self.client.get("/profile")
+        @task(1)
+        def profile(self):
+            self.client.get("/profile")
 
-class WebsiteUser(HttpLocust):
-    task_set = UserBehavior
-    min_wait = 5000
-    max_wait = 9000
-```
+    class WebsiteUser(HttpLocust):
+        task_set = UserBehavior
+        min_wait = 5000
+        max_wait = 9000
 
 You can learn more about what this file does in the Locust documentation and quick start walkthrough which we highly recommend you check out.
 
@@ -154,15 +138,11 @@ Now that we have our locustfile we can do a test.
 
 First ensure your example server is running:
 
-```
-$ ./example_server
-```
+    $ ./example_server
 
 Then we run locust and give it our file.
 
-```
-locust -f locustfile.py --host=http://localhost:8080
-```
+    locust -f locustfile.py --host=http://localhost:8080
 
 We pass in the host of our example server which is running on port 8080 of our localhost.
 
