@@ -1,5 +1,5 @@
-Load Testing with Locust and Kubernetes - Part 1
-=================================================
+Load Testing with Locust
+========================
 
 We believe it's critical to test our systems under load to attempt to understand the impact of system traffic. Not only the increase traffic but also the different styles of traffic. From bursty where a wall of traffic comes within a few minutes or even seconds. To traffic that increases more uniformly. 
 
