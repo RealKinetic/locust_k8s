@@ -330,7 +330,7 @@ With that IP address we can open a browser to view our service running on GKE:
 
 ### Test with local locust
 
-We can use our local locust container to test our newly deployed server with teh following:
+We can use our local locust container to test our newly deployed server with the following:
 
     # Take the EXTERNAL-IP listed from the earlier command and use here
     $ docker run -it -p=8089:8089 -e "TARGET_HOST=http://EXTERNAL-IP:8080" --network=locustnw locust-tasks:latest 
