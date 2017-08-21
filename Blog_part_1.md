@@ -1,17 +1,17 @@
 Load Testing with Locust
 ========================
 
-We believe it's critical to test our systems under load to attempt to understand the impact of system traffic. Not only the increase traffic but also the different styles of traffic. From bursty where a wall of traffic comes within a few minutes or even seconds to traffic that increases more uniformly. 
+We believe it's critical to test our systems under load to attempt to understand the impact of system traffic. Not only increases in traffic but also the different styles of steady traffic. From bursty, where a wall of traffic comes within a few minutes or even seconds, to traffic that increases uniformly.
 
-Generating load to exercise our system helps us understand how to configure our system. The different characteristics of activity can have a significant impact on how we both design and configure our systems. For example on a system like Google App Engine Google gives us the ability to configure how many idle machines (they call them instances) Google will provision beyond currently active instances. This allows us to have a buffer of machines to take on load if a wall of traffic hits. We can also configure how long a request since sits in the pending queue waiting for an instance to open up for use. In a latency sensitive environment we may configure this number to be quite low, combined with adding a buffer of idle instances when new traffic comes in it spends a short amount of time in the queue as the scheduler quickly sees that there are no available instances but thankfully instead of waiting for the instances to be spun up our traffic can be routed to the idle instances that have already been spun up. The negative of this of course is the cost of our application will go up. We may be over provisioned and now have wasted compute costs.
+Generating load to exercise our system helps us understand how to configure our system. The different characteristics of activity can have a significant impact on how we both design and configure our systems. For example: Google App Engine gives us the ability to configure how many idle machines (“instances”) Google will provision beyond currently active instances. This allows us to have a buffer of machines to take on load if a wall of traffic hits. We can also configure how long a request sits in the pending queue waiting for an instance. In a latency sensitive environment we may configure this number to be quite low, then add a buffer of idle instances. When new traffic comes in, the scheduler routes it to the idle instances that have already been spun up. The negative of this of course is the cost of our application will go up. We may be over provisioned, wasting compute costs.
 
-Load testing allows us to create artificial usage of our system that we hope to closely mimic to real life use cases. To do this we want to use our existing APIs in the same manner that our clients do. This means using realistic data and creating usage patterns similar to production. Or if we have not yet released our system we may replicate traffic based off our testing, demos or betas. Thankfully there are existing tools such as [Locust](http://locust.io/) that allow us to more easily create these test scenarios. The rest of this post walks us through installing and configuring Locust. As well as creating a simple test scenario against a simple server. In part two we will then take this same Locust setup and combine it with Google Container Engine (Google's hosted Kubernetes) to give ourselves a system that can distribute out over multiple machines and replicate significant amounts of traffic.
+Load testing allows us to create artificial usage of our system mimicking  real usage. To do this we want to use our existing APIs in the same manner that our clients do. This means using production logs to build realistic usage patterns . If we have not yet released our system we could also analyze traffic to our test instances, demos or betas. Existing tools like [Locust](http://locust.io/) allow us to more easily create these test scenarios. The rest of this post walks us through installing Locust and creating a simple test scenario against a real server. In part two we will then take this same Locust setup and combine it with Google Container Engine (Google-hosted Kubernetes) to give ourselves a system that can distribute over multiple machines and replicate significant amounts of traffic.
 
 # Locust
 
 ## What is Locust
 
-The Locust documentation does a good job encapsulating what Locus provides. I've quoted the high level description below but you can visit [their](http://docs.locust.io/en/latest/what-is-locust.html) documentation site here to learn more.
+I've quoted Locust’s high level description below but you can visit [their](http://docs.locust.io/en/latest/what-is-locust.html) documentation site here to learn more.
 
   Locust is an easy-to-use, distributed, user load testing tool. It is intended for load-testing web sites (or other systems) and figuring out how many concurrent users a system can handle.
 
@@ -19,31 +19,31 @@ The Locust documentation does a good job encapsulating what Locus provides. I've
 
   Locust is completely event-based, and therefore it’s possible to support thousands of concurrent users on a single machine. In contrast to many other event-based apps it doesn’t use callbacks. Instead it uses light-weight processes, through gevent. Each locust swarming your site is actually running inside its own process (or greenlet, to be correct). This allows you to write very expressive scenarios in Python without complicating your code with callbacks.
 
-Now that we have a rough idea of what Locust is let's start off by installing locust.
+Now that we have a rough idea of what Locust is, let's get it installed.
 
-** NOTE: If you do not wish to install Locust locally you can skip down to the Docker section towards the bottom of this guide.
+** NOTE: If you don’t want to install Locust locally, skip down to the Docker section towards the bottom of this guide.
 
 ## Install Locust
 
-Locust runs within a Python environment so we will need to setup Python and it's install tools if we don't already have them. Thankfully OSX and most Linux distros come with a version of Python installed. 
+Locust runs in a Python environment so we need to setup Python and its install tools if we don't already have them. Thankfully OS X and most Linux distros come with Python installed. 
 
-To verify that you have Python installed you can open a terminal window and run the following command:
+To verify that you have Python installed, open a terminal window and run the following command:
 
     $ python --version
 
-If you have a version of Python installed you will see a result similar to:
+Hopefully you see a result like this:
 
     Python 2.7.13
 
-To run locust you will need either Python 2.7.x or any version of Python 3 above 3.3. If you do not have a Python runtime installed please visit the [Python site](https://www.python.org/downloads/) to download and install for your environment.
+To run Locust you will need either Python 2.7.x or any version of Python 3 above 3.3. If you do not have a Python runtime installed please visit the [Python site](https://www.python.org/downloads/).
 
-Once you have Python installed we then need to ensure with the Python tools to install packages from their repository system: [pypi](https://pypi.python.org/pypi).
+Once you have Python installed we then need the Python tool to install packages: [pypi](https://pypi.python.org/pypi).
 
-Python leverages Pip to install packages locally. To check if we have pip install open a terminal window and type pip
+Python leverages Pip to install packages locally. To check if we have Pip installed open a terminal window and type
 
     $ pip
 
-You will see something like below if you have pip installed:
+You will see something like this if you have Pip installed:
 
     Usage:
       pip <command> [options]
@@ -65,19 +65,19 @@ You will see something like below if you have pip installed:
     General Options:
     ...
 
-If you do not have pip install please visit the [Pip installation documentation](https://pip.pypa.io/en/stable/installing/) to install.
+If you do not have Pip please visit the [Pip installation instructions](https://pip.pypa.io/en/stable/installing/).
 
-Now that we have a working version of Python and pip we can go ahead with the Locust installation. A note for those Python users that prefer a virtual environment such as [virtualenv](https://virtualenv.pypa.io/en/stable/) you are welcome to go ahead and use a virtual environment as locust behaves fine within a virtual environment. I personally install Locust into the virtual environment for the project I am load testing but it is not a requirement.
+Now that we have Python and Pip we can install Locust. If you prefer a virtual environment such as [virtualenv](https://virtualenv.pypa.io/en/stable/) you are welcome to use one. . I personally install Locust into the virtual environment for the projects I am load testing, but it is not required.
 
-Run this command to install locust ([alternative methods here](http://docs.locust.io/en/latest/installation.html)):
+Run this command to install Locust. ([Alternative methods here](http://docs.locust.io/en/latest/installation.html)):
 
     $ pip install locustio
 
-Now that we have Locust installed we can move on to running a Locust script which requires us to have a server to hit.
+Now that we have Locust installed we can move on to running a Locust script. But first, we need a server to hit.
 
 ## Test Server
 
-I have a repo created that we will build out as we go. Within that repo you will find an example_server binary that was written in Go. You can either directly grab that binary [here](https://github.com/RealKinetic/locust_k8s/blob/49b221e52484c6e0d165490a3dbbf1fe4d2f9dce/example_server). Or you can clone the repo with the following command: `git clone git@github.com:RealKinetic/locust_k8s.git`
+I have a repo created that we will build out as we go. Within that repo you will find an example_server program written in Go. You can directly grab that binary [here](https://github.com/RealKinetic/locust_k8s/blob/49b221e52484c6e0d165490a3dbbf1fe4d2f9dce/example_server) or clone the repo with the following command: `git clone git@github.com:RealKinetic/locust_k8s.git`
 
 Here is the Go code behind the file. It is also included in the repo if you would like to make changes or do not trust running a binary from the Internet. To build the go file run: `$ go build example_server.go`
 
@@ -98,7 +98,7 @@ There are two other endpoints exposed by this example server.
 * `\login` which we will send a post request to and returns `Login. The server will output `Login Request` to stdout when this endpoint is hit.
 * `\profile` which we will send a get request to and returns `Profile`. The server will output `Profile Request` to stdout when this endpoint is hit.
 
-Now that we have an example server to hit we can create the Locust file we will use.
+Now that we have an example server to hit we can create the Locust file.
 
 ## Running Locust
 
@@ -106,7 +106,7 @@ For this example we can use the example provided by Locust in their [quick start
 
 You can use the `locustfile.py` in our example repo or create said file.
 
-Here's the full set of code that you will need to add to `locustfile.py`:
+Here's the code that you will need in `locustfile.py`:
 
     from locust import HttpLocust, TaskSet, task
 
@@ -131,7 +131,7 @@ Here's the full set of code that you will need to add to `locustfile.py`:
         min_wait = 5000
         max_wait = 9000
 
-You can learn more about what this file does in the Locust documentation and quick start walkthrough which we highly recommend you check out.
+You can learn more about what this file does in the Locust documentation and quick start walkthrough (highly recommended).
 
 Now that we have our locustfile we can do a test.
 
@@ -139,13 +139,13 @@ First ensure your example server is running:
 
     $ ./example_server
 
-Then we run locust and give it our file.
+Then we run Locust and give it our file.
 
     locust -f locustfile.py --host=http://localhost:8080
 
-We pass in the host of our example server which is running on port 8080 of our localhost.
+We pass in the host of our example server which is running on port 8080 of localhost.
 
-With that now running we can open the web user interface at: http://localhost:8089
+With Locust running we can open the web user interface at: http://localhost:8089
 
 We can do a quick test by adding 1 user to simulate and 1 for a hatch rate. Then click the `Start swarming` button.
 
