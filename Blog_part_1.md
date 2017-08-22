@@ -1,7 +1,7 @@
 Load Testing with Locust
 ========================
 
-We believe it's critical to test our systems under load to attempt to understand the impact of system traffic. Not only increases in traffic but also the different styles of steady traffic. From bursty, where a wall of traffic comes within a few minutes or even seconds, to traffic that increases uniformly.
+We believe it's critical to test our systems under load to attempt to understand the impact of system traffic. Not only increases in traffic, but also the different styles of steady traffic. It’s important to measure traffic from bursty, where a wall of traffic comes within a few minutes or even seconds, to traffic that increases uniformly.
 
 Generating load to exercise our system helps us understand how to configure our system. The different characteristics of activity can have a significant impact on how we both design and configure our systems. For example: Google App Engine gives us the ability to configure how many idle machines (“instances”) Google will provision beyond currently active instances. This allows us to have a buffer of machines to take on load if a wall of traffic hits. We can also configure how long a request sits in the pending queue waiting for an instance. In a latency sensitive environment we may configure this number to be quite low, then add a buffer of idle instances. When new traffic comes in, the scheduler routes it to the idle instances that have already been spun up. The negative of this of course is the cost of our application will go up. We may be over provisioned, wasting compute costs.
 
@@ -157,7 +157,7 @@ We're going to build and run our [Docker](https://www.docker.com/) containers lo
 
 # Docker Environment
 
-We will have two containers running in our scenario. Our example server and locust instace. To support those our locust container being able to communicate with our example server we need to configure a custom docker network. Thankfully this is a simple process.
+We will have two containers running in our scenario: our example server and Locust instance. To support our locust container’s communication with our example server we need to configure a custom Docker network. Thankfully this is a simple process.
 
 The following command will create a custom Docker network named `locustnw`
 
@@ -199,23 +199,23 @@ This will use the `Dockerfile` we've create in the `examples/golang` directory w
     # Start Locust using LOCUS_OPTS environment variable
     ENTRYPOINT ["./example_server"] 
 
-The `-t` argument allows us to tag our container with a name in this case we're tagging it `goexample`.
+The `-t` argument allows us to tag our container with a name. In this case we're tagging it `goexample`.
 
 Now that we've created our container we can run it with the following:
 
     $ docker run -it -p=8080:8080 --name=exampleserver --network=locustnw goexample
 
-- The `-p` argument exposes port 8080 within the container to the outside on the same port 8080. This is the port our example server is listenining on.
-- The `--name` argument allows us to give a named identifier to the container. This allows us to reference this container by name as a host instead of an IP address. This will be critical when we run the locust container.
+- The `-p` flag exposes port 8080 within the container to the outside on the same port 8080. This is the port our example server is listenining on.
+- The `--name` flag  allows us to give a named identifier to the container. This allows us to reference this container by name as a host instead of by IP address. This will be critical when we run the locust container.
 - The `--network` argument tells Docker to use our custom network for this container.
 
-Since we exposed and mapped port 8080 you can test that our server is working by visiting http://localhost:8080.
+Since we exposed and mapped port 8080, you can test that our server is working by visiting http://localhost:8080.
 
-Once you've verified that our example server container is running we can now build and run our locust container. FYI if you run locust locally earlier you can re-run the same tests again now pointing at the container version of our example server with the following `locust -f locustfile.py --host=http://localhost:8080`.
+Once you've verified that our example server container is running we can now build and run our Locust container. FYI if you ran Locust locally earlier you can re-run the same tests again now. Just point at the container version of our example server with the following `locust -f locustfile.py --host=http://localhost:8080`.
 
 ## Locust Container
 
-Building and running our locust container is similar to our example server. First we build the container image with the following:
+Building and running our locust container is similar to the process we used for our example server. First we build the container image with the following:
 
     $ docker build docker -t locust-tasks
 
@@ -243,7 +243,7 @@ This uses the `Dockerfile` in our `docker` directory. That file consists of:
     # Start Locust using LOCUS_OPTS environment variable
     ENTRYPOINT ["./run.sh"] 
 
-A note. As you can see this container doesn't run locust directly but instead uses a `run.sh` file which lives in `docker/locust-tasks`. This file is important for part 2 of our tutorial when we will run locust in a distributed mode.
+A note: as you can see, this container doesn't run Locust directly but instead uses a `run.sh` file which lives in `docker/locust-tasks`. This file is important for part 2 of our tutorial, when we will run locust in a distributed mode.
 
 We will discuss quickly one import part of that file. Looking at the contents of that file:
 
@@ -267,7 +267,7 @@ With that container built we can run it with a similar command as our dev server
 
     $ docker run -it -p=8089:8089 -e "TARGET_HOST=http://exampleserver:8080" --network=locustnw locust-tasks:latest
 
-Once again we're exposing a port but this time it's port `8089` which is the default locust port. And we pass the same network command to ensure this container also runs on our customer Docker network. However one additional argument we pass in is `-e`. This is the argument for passing in environment variables to Docker container. In this case we're passing in `http://exampleserver:8080` as the variable `TARGET_HOST`. So now we can see how the `$TARGET_HOST` environment variable in our `run.sh` script comes into play. Also we see how the custom Docker network and named containers allows us to use `exampleserver` as the host name versus attempting to find the containers IP address and passing that in. This simplifies things a great deal.
+Once again we're exposing a port but this time it's port `8089`, the default locust port. We pass the same network command to ensure this container also runs on our custom Docker network. However: one additional argument we pass in is `-e`. This is the argument for passing environment variables in to the Docker container. In this case we're passing in `http://exampleserver:8080` as the variable `TARGET_HOST`. So now we can see how the `$TARGET_HOST` environment variable in our `run.sh` script comes into play. We also see how the custom Docker network and named containers allows us to use `exampleserver` as the host name versus attempting to find the containers IP address and passing that in. This simplifies things a great deal.
 
 Now that we have our locust server running we can visit http://localhost:8089 in a browser on our local machine to run locust via a container hitting our dev server also running within a container.
 
@@ -341,11 +341,11 @@ To test via locust once again open locust in a browser http://localhost:8089
 
     $ open http://localhost:8089
 
-To run locust on GKE you can use the exact same process for the example server just replacing it with the locust container image. You can run it within the same cluster or create a new cluster if you'd like. Obviously in a production environment you'd like want to separate your Load tester from your system as you do not want contamination to get a more realistic representation.
+To run locust on GKE you can use the exact same process for the example server just replacing it with the locust container image. You can run it within the same cluster or create a new cluster if you'd like. Obviously in a production environment,  to get a more realistic representation, you'd want to separate your Load tester from your system.
 
 ### Cleanup
 
-Since having these containers running will cost you money you'll want to remove them when you are done. The clean up process is straight forward as well.
+Since having these containers running will cost you money, you'll want to remove them when you are done. The clean up process is straight forward as well.
 
 First we're going to delete our example-node from the cluster:
 
