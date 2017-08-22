@@ -341,7 +341,7 @@ To test via locust once again open locust in a browser http://localhost:8089
 
     $ open http://localhost:8089
 
-To run locust on GKE you can use the exact same process for the example server just replacing it with the locust container image. You can run it within the same cluster or create a new cluster if you'd like. Obviously in a production enviornment you'd like want to separate your Load tester from your system as you do not want contamenation to get a more realisitc representation.
+To run locust on GKE you can use the exact same process for the example server just replacing it with the locust container image. You can run it within the same cluster or create a new cluster if you'd like. Obviously in a production environment you'd like want to separate your Load tester from your system as you do not want contamination to get a more realistic representation.
 
 ### Cleanup
 
@@ -356,4 +356,4 @@ Once that's been removed we can then delete the cluster itself:
     $ gcloud container clusters delete example-cluster
 
 # Part 1 Complete
-We now have a working example_server and a Locust file to run against that server. And while Locust is multi-threaded and can create a decent amount of traffic it is limited by the single machine's resources. Even pushing it to a powerful hosted machine is going to hit limitations. The true power of Locust comes in its ability to distribute out over multiple machines. However creating clustered enviornments can be a bit of a pain. Thankfully GKE makes this a pretty simple process. In part two we'll walkthrough leveraging Google Compute Enging (Kubernetes) and Locust's distributed mode to give us a maintainable distributed environment to run our load tests from.
+We now have a working example_server and a Locust file to run against that server. And while Locust is multi-threaded and can create a decent amount of traffic it is limited by the single machine's resources. Even pushing it to a powerful hosted machine is going to hit limitations. The true power of Locust comes in its ability to distribute out over multiple machines. However creating clustered environments can be a bit of a pain. Thankfully GKE makes this a simple process. In part two we'll walk through leveraging Google Compute Engine (Kubernetes) and Locust's distributed mode to give us a maintainable distributed environment to run our load tests from.
