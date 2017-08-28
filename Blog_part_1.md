@@ -1,11 +1,11 @@
 Load Testing with Locust
 ========================
 
-We believe it's critical to test our systems under load to attempt to understand the impact of system traffic. Not only increases in traffic, but also the different styles of steady traffic. It’s important to measure traffic from bursty, where a wall of traffic comes within a few minutes or even seconds, to traffic that increases uniformly.
+We believe it's critical to profile our systems under varied loads to understand its behavior. We profile not only with increases in traffic, but also different shapes of steady traffic. It’s important to measure “bursty” traffic, sharp changes over a few minutes or even seconds, , and slow, steadily changing traffic.
 
-Generating load to exercise our system helps us understand how to configure our system. The different characteristics of activity can have a significant impact on how we both design and configure our systems. For example: Google App Engine gives us the ability to configure how many idle machines (“instances”) Google will provision beyond currently active instances. This allows us to have a buffer of machines to take on load if a wall of traffic hits. We can also configure how long a request sits in the pending queue waiting for an instance. In a latency sensitive environment we may configure this number to be quite low, then add a buffer of idle instances. When new traffic comes in, the scheduler routes it to the idle instances that have already been spun up. The negative of this of course is the cost of our application will go up. We may be over provisioned, wasting compute costs.
+Exercising our systems under load helps us understand how to configure  for production usage. The expected characteristics of service activity can have a significant impact on how we both design and configure our systems. For example: Google App Engine gives us the ability to configure how many idle instances (“containers”) Google will provision beyond currently active instances. This allows us to have a buffer of machines to take on load if a wall of traffic hits. We can also configure how long a request may sit in the pending request queue waiting for an instance before a new instance will be allocated. In a latency sensitive environment we may configure this number to be quite low, then add a buffer of idle instances. When new traffic comes in, the scheduler routes it to the idle instances that have already been spun up. A negative of this of course is the cost of our application will go up. We may be over provisioned, wasting compute costs, but would be more responsive to sharp increases in load. There’s also the potential for us to increase latency. If we reduce the pending time to something lower than the median request service time that makes our “spin up time” (pending time + loading time) greater than the media request time we will actually be frequently spinning up new instances. And those spin up times will be slower than just waiting for the existing instances to clear out current requests. For decreasing traffic this won’t matter. For steady traffic, it will reach a steady state of a lot of instances. For increasing traffic, it will spin up a tremendous number of instances. These nuances are why load testing is so critical to optimizing the behavior and costs of your system.
 
-Load testing allows us to create artificial usage of our system mimicking  real usage. To do this we want to use our existing APIs in the same manner that our clients do. This means using production logs to build realistic usage patterns . If we have not yet released our system we could also analyze traffic to our test instances, demos or betas. Existing tools like [Locust](http://locust.io/) allow us to more easily create these test scenarios. The rest of this post walks us through installing Locust and creating a simple test scenario against a real server. In part two we will then take this same Locust setup and combine it with Google Container Engine (Google-hosted Kubernetes) to give ourselves a system that can distribute over multiple machines and replicate significant amounts of traffic.
+Load testing allows us to create artificial usage of our system mimicking real usage. To do this we want to use our existing APIs in the same manner that our clients do. This means using production logs to build realistic usage patterns. If we have not yet released our system we could analyze traffic to our test instances, demos or betas. Existing tools like [Locust](http://locust.io/) allow us to more easily create these test scenarios. The rest of this post walks us through installing Locust and creating a simple test scenario against a real server. In part two we take this same Locust setup and combine it with [Google Container Engine](https://cloud.google.com/container-engine/) (Google-hosted Kubernetes) to give ourselves a system that can distribute over multiple machines and replicate significant amounts of traffic.
 
 # Locust
 
@@ -37,9 +37,7 @@ Hopefully you see a result like this:
 
 To run Locust you will need either Python 2.7.x or any version of Python 3 above 3.3. If you do not have a Python runtime installed please visit the [Python site](https://www.python.org/downloads/).
 
-Once you have Python installed we then need the Python tool to install packages: [pypi](https://pypi.python.org/pypi).
-
-Python leverages Pip to install packages locally. To check if we have Pip installed open a terminal window and type
+Once you have Python installed, we will install several packages from [pypi](https://pypi.python.org/pypi).To do this, Python leverages Pip to install packages locally. To check if we have Pip installed open a terminal window and type
 
     $ pip
 
@@ -67,7 +65,7 @@ You will see something like this if you have Pip installed:
 
 If you do not have Pip please visit the [Pip installation instructions](https://pip.pypa.io/en/stable/installing/).
 
-Now that we have Python and Pip we can install Locust. If you prefer a virtual environment such as [virtualenv](https://virtualenv.pypa.io/en/stable/) you are welcome to use one. . I personally install Locust into the virtual environment for the projects I am load testing, but it is not required.
+Now that we have Python and Pip we can install Locust. If you prefer a virtual environment such as [virtualenv](https://virtualenv.pypa.io/en/stable/) you are welcome to use one. I personally install Locust into the virtual environment for the projects I am load testing, but it is not required.
 
 Run this command to install Locust. ([Alternative methods here](http://docs.locust.io/en/latest/installation.html)):
 
@@ -77,7 +75,7 @@ Now that we have Locust installed we can move on to running a Locust script. But
 
 ## Test Server
 
-I have a repo created that we will build out as we go. Within that repo you will find an example_server program written in Go. You can directly grab that binary [here](https://github.com/RealKinetic/locust_k8s/blob/49b221e52484c6e0d165490a3dbbf1fe4d2f9dce/example_server) or clone the repo with the following command: `git clone git@github.com:RealKinetic/locust_k8s.git`
+I have created a repo we will build out as we go. Within that repo you will find an example_server program written in Go (compiled on OSX). You can directly grab that binary [here](https://github.com/RealKinetic/locust_k8s/blob/49b221e52484c6e0d165490a3dbbf1fe4d2f9dce/example_server) or clone the repo with the following command: `git clone git@github.com:RealKinetic/locust_k8s.git`
 
 Here is the Go code behind the file. It is also included in the repo if you would like to make changes or do not trust running a binary from the Internet. To build the go file run: `$ go build example_server.go`
 
