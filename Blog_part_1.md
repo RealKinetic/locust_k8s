@@ -29,7 +29,7 @@ Now that we have a rough idea of what Locust is, let's get it installed.
 
 ## Install Locust
 
-Locust runs in a Python environment so we need to setup Python and its install tools if we don't already have them. Thankfully OS X and most Linux distros come with Python installed. 
+Locust runs in a Python environment so you need to setup Python and its package install tools, if you don't already have them. Thankfully OS X and most Linux distros come with Python installed.
 
 To verify that you have Python installed, open a terminal window and run the following command:
 
@@ -43,29 +43,11 @@ To run Locust you will need either Python 2.7.x or any version of Python 3 above
 
 Once you have Python installed, we will install several packages from [pypi](https://pypi.python.org/pypi).To do this, Python leverages Pip to install packages locally. To check if we have Pip installed open a terminal window and type
 
-    $ pip
+    $ pip --version
 
 You will see something like this if you have Pip installed:
 
-    Usage:
-      pip <command> [options]
-
-    Commands:
-      install                     Install packages.
-      download                    Download packages.
-      uninstall                   Uninstall packages.
-      freeze                      Output installed packages in requirements format.
-      list                        List installed packages.
-      show                        Show information about installed packages.
-      check                       Verify installed packages have compatible dependencies.
-      search                      Search PyPI for packages.
-      wheel                       Build wheels from your requirements.
-      hash                        Compute hashes of package archives.
-      completion                  A helper command used for command completion.
-      help                        Show help for commands.
-
-    General Options:
-    ...
+    pip 9.0.1 from /usr/lib/python2.7/site-packages (python 2.7)
 
 If you do not have Pip please visit the [Pip installation instructions](https://pip.pypa.io/en/stable/installing/).
 
@@ -75,7 +57,7 @@ Run this command to install Locust. ([Alternative methods here](http://docs.locu
 
     $ pip install locustio
 
-Now that we have Locust installed we can move on to running a Locust script. But first, we need a server to hit.
+Now that we have Locust installed we can create and run a Locust script. But first, we need a server to hit.
 
 ## Test Server
 
