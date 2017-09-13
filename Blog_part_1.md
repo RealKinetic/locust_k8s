@@ -80,8 +80,8 @@ This server will listen on port `8080`. You can test it by visiting [http://loca
 
 There are two other endpoints exposed by our example server.
 
-* [`/login`](http://localhost:8080/login) accepts `POST` requests and returns a plain text response "`Login.`". The server will output "`Login Request`" to stdout when this endpoint is hit.
-* [`/profile`](http://localhost:8080/profile) accepts `GET` requests and returns "`Profile.`". The server will output "`Profile Request`" to stdout when this endpoint is hit.
+* [`/login`](http://localhost:8080/login) accepts `POST` requests and returns a plain text response "*Login.*". The server will output "`Login Request`" to stdout when this endpoint is hit.
+* [`/profile`](http://localhost:8080/profile) accepts `GET` requests and returns "*Profile.*". The server will output "`Profile Request`" to stdout when this endpoint is hit.
 
 Now that we have an example server, we can create the Locust test file.
 
