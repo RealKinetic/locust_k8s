@@ -149,13 +149,15 @@ In the Locust UI you will see a list of the endpoints being hit. You will see th
 
 # Docker
 
-We're going to build and run our [Docker](https://www.docker.com/) containers locally first so go ahead and install Docker for your environment based off the directions on the [Docker](https://www.docker.com/) website.
+We're going to start by building and running our [containers](https://www.docker.com/what-container) locally using [Docker](https://www.docker.com/). Install Docker for your environment using the directions on the [Docker](https://www.docker.com/) website.
+
+**NOTE:** Before continuing, you should stop the two servers from the previous sections using `ctrl-c` in each terminal window.
 
 # Docker Environment
 
-We will have two containers running in our scenario: our example server and Locust instance. To support our locust container’s communication with our example server we need to configure a custom Docker network. Thankfully this is a simple process.
+We will run two containers: our service (our golang example server) and our Locust instance. To support our locust container’s communication with our example server we need to configure a custom Docker network. Thankfully this is a simple process.
 
-The following command will create a custom Docker network named `locustnw`
+The following command will create a custom Docker network named `locustnw`:
 
     $ docker network create --driver bridge locustnw
 
@@ -186,28 +188,33 @@ This will use the `Dockerfile` we've create in the `examples/golang` directory w
     # Build the example executable
     RUN go build example_server.go
 
-    # Set script to be executable
+    # Set the server to be executable
     RUN chmod 755 example_server
 
     # Expose the required port (8080)
     EXPOSE 8080
 
-    # Start Locust using LOCUS_OPTS environment variable
+    # Start our example service
     ENTRYPOINT ["./example_server"] 
 
-The `-t` argument allows us to tag our container with a name. In this case we're tagging it `goexample`.
+The `-t` argument tags our container with a name, `goexample`, in this case.
 
 Now that we've created our container we can run it with the following:
 
     $ docker run -it -p=8080:8080 --name=exampleserver --network=locustnw goexample
 
-- The `-p` flag exposes port 8080 within the container to the outside on the same port 8080. This is the port our example server is listenining on.
-- The `--name` flag  allows us to give a named identifier to the container. This allows us to reference this container by name as a host instead of by IP address. This will be critical when we run the locust container.
+- The `-p` flag exposes the container's port 8080 on localhost as port 8080. This is the port our example server is listening on.
+- The `--name` flag  allows us to give a named identifier to the container. This allows us to reference this container by name as a host instead of by IP address. This will be critical when we run the Locust container.
 - The `--network` argument tells Docker to use our custom network for this container.
 
-Since we exposed and mapped port 8080, you can test that our server is working by visiting http://localhost:8080.
+**NOTE:** If you get the following error, stop the `example_server` we started previously (or any other services on port 8080).
 
-Once you've verified that our example server container is running we can now build and run our Locust container. FYI if you ran Locust locally earlier you can re-run the same tests again now. Just point at the container version of our example server with the following `locust -f locustfile.py --host=http://localhost:8080`.
+    docker: Error response from daemon: driver failed programming external connectivity on endpoint exampleserver (...): Error starting userland proxy: Bind for 0.0.0.0:8080 failed: port is already allocated.
+
+
+Since we exposed and mapped port 8080, you can test that our server is working by visiting [http://localhost:8080](http://localhost:8080).
+
+Once you've verified your example server container is running, you can now build and run your Locust container.
 
 ## Locust Container
 
@@ -215,7 +222,7 @@ Building and running our locust container is similar to the process we used for 
 
     $ docker build docker -t locust-tasks
 
-This uses the `Dockerfile` in our `docker` directory. That file consists of:
+This builds the `Dockerfile` located in our `docker` directory. That file consists of:
 
     # Start with a base Python 2.7.8 image
     FROM python:2.7.13
@@ -239,9 +246,9 @@ This uses the `Dockerfile` in our `docker` directory. That file consists of:
     # Start Locust using LOCUS_OPTS environment variable
     ENTRYPOINT ["./run.sh"] 
 
-A note: as you can see, this container doesn't run Locust directly but instead uses a `run.sh` file which lives in `docker/locust-tasks`. This file is important for part 2 of our tutorial, when we will run locust in a distributed mode.
+A note: this container doesn't run Locust directly but instead uses a `run.sh` file which lives in `docker/locust-tasks`. This file is important for part 2 of our tutorial where we will run locust in a distributed mode.
 
-We will discuss quickly one import part of that file. Looking at the contents of that file:
+We will briefly discuss one import part of the `run.sh` file:
 
     LOCUST="/usr/local/bin/locust"
     LOCUS_OPTS="-f /locust-tasks/locustfile.py --host=$TARGET_HOST"
@@ -257,9 +264,9 @@ We will discuss quickly one import part of that file. Looking at the contents of
     
     $LOCUST $LOCUS_OPTS
 
-You see that we rely on an environment variable named `$TARGET_HOST` to be the host url passed into our locustfile. This is what will allow us to communicate across containers within our Docker network. Let's look at how we do that.
+We rely on an environment variable named `$TARGET_HOST` being passed into our locustfile. This is key for us to communicate across containers within our Docker network.
 
-With that container built we can run it with a similar command as our dev server.
+With our container built, we can run it with a similar command as our dev server.
 
     $ docker run -it -p=8089:8089 -e "TARGET_HOST=http://exampleserver:8080" --network=locustnw locust-tasks:latest
 
