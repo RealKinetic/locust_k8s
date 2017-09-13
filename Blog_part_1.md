@@ -89,9 +89,9 @@ Now that we have an example server, we can create the Locust test file.
 
 For this example we can use the example provided by Locust in their [quick start documentation](http://docs.locust.io/en/latest/quickstart.html).
 
-You can use the `locustfile.py` in our example repo or create said file.
+You can use the `locustfile.py` in our example repo, or create the file yourself.
 
-Here's the code that you will need in `locustfile.py`:
+Your `locustfile.py` should contain the following:
 
     from locust import HttpLocust, TaskSet, task
 
@@ -101,7 +101,9 @@ Here's the code that you will need in `locustfile.py`:
             self.login()
 
         def login(self):
-            self.client.post("/login", {"username":"ellen_key", "password":"education"})
+            self.client.post("/login",
+                             {"username":"ellen_key",
+                              "password":"education"})
 
         @task(2)
         def index(self):
@@ -116,7 +118,7 @@ Here's the code that you will need in `locustfile.py`:
         min_wait = 5000
         max_wait = 9000
 
-You can learn more about what this file does in the Locust documentation and quick start walkthrough (highly recommended).
+The Locust documentation and [quick start documentation](http://docs.locust.io/en/latest/quickstart.html) provides an explanation of the contents. We highly recommend working through their docs to learn more.
 
 Now that we have our locustfile we can do a test.
 
@@ -124,17 +126,26 @@ First ensure your example server is running:
 
     $ ./example_server
 
-Then we run Locust and give it our file.
+Now, in a new terminal we will run Locust. We will pass it the name of our test file, `locustfile.py`, and tell it to run against our example server on port `8080` of `localhost`.
 
-    locust -f locustfile.py --host=http://localhost:8080
+    $ locust -f locustfile.py --host=http://localhost:8080
 
-We pass in the host of our example server which is running on port 8080 of localhost.
+With Locust running we can open the web user interface at: [http://localhost:8089](http://localhost:8089).
 
-With Locust running we can open the web user interface at: http://localhost:8089
+For this test, we will simulate 1 user and specify 1 for the hatch rate. Click the `Start swarming` button. You should now see something similar to the following in the terminal running example server:
 
-We can do a quick test by adding 1 user to simulate and 1 for a hatch rate. Then click the `Start swarming` button.
+    2017/09/13 15:24:33 Login Request
+    2017/09/13 15:24:33 Profile Request
+    2017/09/13 15:24:40 Profile Request
+    2017/09/13 15:24:46 Index Request
+    2017/09/13 15:24:55 Index Request
+    2017/09/13 15:25:00 Index Request
+    2017/09/13 15:25:07 Profile Request
+    2017/09/13 15:25:12 Index Request
 
-You should now see messages being sent to the stdout of your example server. In the Locust UI you will see a list of the endpoints being hit. You will see the request counts incrementing for `/` and `/profile`. There should not be failures being logged unless Locust is having issues connecting to your server.
+In the Locust UI you will see a list of the endpoints being hit. You will see the request counts incrementing for `/` and `/profile`. There should be no failures unless Locust is having issues connecting to your server.
+
+![Locust Screenshot](/locust-run.png)
 
 # Docker
 
