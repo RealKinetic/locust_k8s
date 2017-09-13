@@ -23,11 +23,11 @@ WORKDIR example
 # Build the example executable
 RUN go build example_server.go
 
-# Set script to be executable
+# Set server to be executable
 RUN chmod 755 example_server
 
 # Expose the required port (8080)
 EXPOSE 8080
 
-# Start Locust using LOCUS_OPTS environment variable
+# Start our example service
 ENTRYPOINT ["./example_server"] 
