@@ -25,7 +25,7 @@ I've quoted Locust’s high level description below but you can visit [their](ht
 
 Now that we have a rough idea of what Locust is, let's get it installed.
 
-** NOTE: If you don’t want to install Locust locally, skip down to the Docker section towards the bottom of this guide.
+**NOTE:** If you don’t want to install Locust locally, skip down to the Docker section towards the bottom of this guide.
 
 ## Install Locust
 
@@ -201,7 +201,10 @@ The `-t` argument tags our container with a name, `goexample`, in this case.
 
 Now that we've created our container we can run it with the following:
 
-    $ docker run -it -p=8080:8080 --name=exampleserver --network=locustnw goexample
+    $ docker run -it -p=8080:8080 \
+      --name=exampleserver \
+      --network=locustnw \
+      goexample
 
 - The `-p` flag exposes the container's port 8080 on localhost as port 8080. This is the port our example server is listening on.
 - The `--name` flag  allows us to give a named identifier to the container. This allows us to reference this container by name as a host instead of by IP address. This will be critical when we run the Locust container.
@@ -229,7 +232,7 @@ This builds the `Dockerfile` located in our `docker` directory. That file consis
     
     MAINTAINER Beau Lyddon <beau.lyddon@realkinetic.com>
     
-    # Add the external tasks directory into /tasks
+    # Add the external tasks directory into /locust-tasks
     RUN mkdir locust-tasks
     ADD locust-tasks /locust-tasks
     WORKDIR /locust-tasks
@@ -266,19 +269,23 @@ We will briefly discuss one import part of the `run.sh` file:
 
 We rely on an environment variable named `$TARGET_HOST` being passed into our locustfile. This is key for us to communicate across containers within our Docker network.
 
-With our container built, we can run it with a similar command as our dev server.
+With our container built, we can run it with a similar command as our example service.
 
-    $ docker run -it -p=8089:8089 -e "TARGET_HOST=http://exampleserver:8080" --network=locustnw locust-tasks:latest
+    $ docker run -it -p=8089:8089 \
+      -e "TARGET_HOST=http://exampleserver:8080" \
+      --network=locustnw locust-tasks:latest
 
-Once again we're exposing a port but this time it's port `8089`, the default locust port. We pass the same network command to ensure this container also runs on our custom Docker network. However: one additional argument we pass in is `-e`. This is the argument for passing environment variables in to the Docker container. In this case we're passing in `http://exampleserver:8080` as the variable `TARGET_HOST`. So now we can see how the `$TARGET_HOST` environment variable in our `run.sh` script comes into play. We also see how the custom Docker network and named containers allows us to use `exampleserver` as the host name versus attempting to find the containers IP address and passing that in. This simplifies things a great deal.
+Once again we're exposing a port but this time it's port `8089`, the default locust port. We pass the network name to ensure this container also runs on our custom `locustnw` network.
 
-Now that we have our locust server running we can visit http://localhost:8089 in a browser on our local machine to run locust via a container hitting our dev server also running within a container.
+We also pass an additional argument: `-e`. This argument sets environment variables inside the Docker container. In this case we're passing in `http://exampleserver:8080` as the variable `TARGET_HOST`. This is how the `$TARGET_HOST` environment variable needed by our `run.sh` script is set. We also see how the custom Docker network and named containers allow us to use `exampleserver` as the host name versus attempting to find the containers IP address and passing that in. This simplifies things a great deal.
+
+Now that we have our locust server running we can visit [http://localhost:8089](http://localhost:8089) in a browser on our local machine. This connects to our container which will test against our example server, also running within a container.
 
     $ open http://localhost:8089
 
 # Deployment
 
-We can obviously install Locust directly on any machine we'd like. Whether on bare metal, a VM, or in our case we're going to use [Docker](https://www.docker.com/) and [Google Container Engine (GKE)](https://www.docker.com/).
+We can install Locust directly on any machine we'd like. Bare metal, a VM, or, in our case, we're going to use [Docker](https://www.docker.com/) and [Google Container Engine (GKE)](https://cloud.google.com/container-engine/).
 
 ## Google Container Engine
 
