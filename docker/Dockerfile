@@ -17,7 +17,7 @@ FROM python:2.7.13
 
 MAINTAINER Beau Lyddon <beau.lyddon@realkinetic.com>
 
-# Add the external tasks directory into /tasks
+# Add the external tasks directory into /locust-tasks
 RUN mkdir locust-tasks
 ADD locust-tasks /locust-tasks
 WORKDIR /locust-tasks
