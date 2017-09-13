@@ -1,25 +1,27 @@
 Load Testing with Locust
 ========================
 
-We believe it's critical to profile our systems under varied loads to understand their behavior. It’s important to assess the system using both “bursty” traffic, sharp changes over a few minutes or even seconds, and slow, steadily changing traffic. We profile not only with changing traffic, but also steady traffic - which is often neglected. The results are used to validate our assumptions about how the service(s) should behave, and to configure the systems for expected production traffic.
+We believe it's critical to profile our systems under varied loads to understand their behavior. It’s important to assess the system using both “bursty” traffic, sharp changes over a few minutes or even seconds, and slow, steadily changing traffic. We profile not only with changing traffic, but also steady traffic over longer periods of time - which is often neglected. The results are used to validate our assumptions about the service(s) behavior, and to configure the systems for expected production traffic.
 
-Let us walk through an example of how we use profiling data in practice. For this example, we will use [Google App Engine](https://cloud.google.com). App Engine provides a set of managed, scalable services and will automatically manage your stateless application. App Engine allows us to configure how many idle instances (“containers”) to provision beyond currently active instances. The idle instances act like a buffer to handle spikes in traffic. We can also configure how long a request may sit in the pending request queue waiting for an instance before a new instance will be allocated. There are several other settings we can configure as well. App Engine services are a good learning tool because they are stateless and the advanced, automated scheduler is comparatively easy to reason about.
+We will explain how we use profiling data in practice using an example. For this example, we will use [Google App Engine](https://cloud.google.com/appengine/) to build our service. App Engine provides a set of managed, scalable services and will automatically manage your stateless application. App Engine allows us to configure how many idle [instances](https://cloud.google.com/appengine/docs/standard/python/an-overview-of-app-engine) (think “containers”) to provision beyond currently active instances. Idle instances act like a buffer to handle spikes in traffic, and the scheduler will attempt to maintain the buffer at the specified size. We can also configure how long a request will wait for an instance before a new instance will be allocated - pending latency. There are [several other settings](https://cloud.google.com/appengine/docs/standard/python/config/appref#automatic_scaling) we can configure as well. App Engine is a good learning tool because services should be stateless and the advanced, [automated scheduler](https://cloud.google.com/appengine/docs/standard/python/how-instances-are-managed) is comparatively easy to reason about.
 
-Consider a latency sensitive service. We might start by configuring the pending latency to be quite low and adding a buffer of idle instances. When a new request comes in, the scheduler routes it to an idle instance that has already been spun up - if one is available. Of course, a negative of maintaining the buffer of idle instances is that we are over provisioning - increasing compute costs. The application *should* be more responsive to sharp increases in load. However, if we do not profile our service carefully, there is the potential for us to *increase* latency. If we reduce the allowed pending time below the median request latency plus our service's loading time, our “spin up time”, we will be spinning up new instances frequently. Those spin up times will ultimately take longer than just waiting for an existing instance to finish servicing its current request. For decreasing traffic this won’t matter - we will be reducing instances anyways. For steady traffic, depending on the specific latency ratios, it could reach a steady state with more instances than required *or* it might result in constant instance churn (instances being frequently spun up/down). For increasing traffic, it will spin up a tremendous number of instances - far more than necessary to maintain good performance. These nuances are why load profiling is so critical to optimizing the behavior and costs of your system. We need to conduct realistic profiling in order to measure the numbers (loading-up time, expected request latency) and combine them with our *expectations* (for idle instance count) in order to configure the system optimally.
+Let's consider a latency sensitive service. We might start by configuring the pending latency to be quite low and adding a buffer of idle instances. When a new request comes in, the scheduler routes it to an idle instance that has already been spun up - if one is available. Of course, a negative of maintaining the buffer of idle instances is that we are over provisioning - increasing compute costs. The application *should* be more responsive to sharp increases in load. However, if we do not profile our service carefully, there is the potential for us to *increase* latency. If we reduce the allowed pending time below the median request latency plus our service's loading time, our “spin up time”, we will be spinning up new instances too frequently. Those spin up times will ultimately take longer than just waiting for an existing instance to finish servicing its current request. For decreasing traffic this won’t matter - we will be reducing instances anyways. For steady traffic, depending on the specific latency ratios, it could reach a over-provisioned steady state *or* it might result in constant instance churn (instances being continually spun up/down). For increasing traffic, it will spin up a tremendous number of instances - far more than necessary to maintain good performance. These nuances are why load profiling is so critical to optimizing the behavior and costs of your system. We need to conduct realistic profiling in order to measure the numbers (loading-up time, expected request latency) and combine them with our *expectations* (for idle instance count) in order to configure the system optimally.
 
-Load testing allows us to create artificial usage of our system that mimics real usage. To do this correctly, we want to use our existing APIs in the same manner that our clients do. This means using production logs to build realistic usage patterns. If we have not yet released our system we could analyze traffic to our test instances, demos or betas. Existing tools like [Locust](http://locust.io/) allow us to more easily create these test scenarios. The rest of this post walks us through installing Locust, and then creating a simple test scenario we will run against a real server. In part two we take our Locust setup and combine it with [Google Container Engine](https://cloud.google.com/container-engine/) (Google-hosted Kubernetes) to build a system uses multiple machines to generate significant amounts of traffic.
+Load testing allows us to create artificial usage of our system that mimics real usage. To do this correctly, we want to use our existing APIs in the same manner that our clients do. This means using production logs to build realistic usage patterns. If we have not yet released our system we could analyze traffic to our test instances, demos or betas. Existing tools like [Locust](http://locust.io/) allow us to more easily create these test scenarios.
+
+The rest of this post walks us through installing Locust, and then creating a simple test scenario we will run against a real server. In part two we take our Locust setup and combine it with [Google Container Engine](https://cloud.google.com/container-engine/) (Google-hosted Kubernetes) to build a system uses multiple machines to generate significant amounts of traffic.
 
 # Locust
 
 ## What is Locust
 
-I've quoted Locust’s high level description below but you can visit [their](http://docs.locust.io/en/latest/what-is-locust.html) documentation site here to learn more.
+I've quoted Locust’s high level description below but you can visit [their](http://docs.locust.io/en/latest/what-is-locust.html) documentation site to learn more.
 
-  Locust is an easy-to-use, distributed, user load testing tool. It is intended for load-testing web sites (or other systems) and figuring out how many concurrent users a system can handle.
+> Locust is an easy-to-use, distributed, user load testing tool. It is intended for load-testing web sites (or other systems) and figuring out how many concurrent users a system can handle.
 
-  The idea is that during a test, a swarm of locusts will attack your website. The behavior of each locust (or test user if you will) is defined by you and the swarming process is monitored from a web UI in real-time. This will help you battle test and identify bottlenecks in your code before letting real users in.
+> The idea is that during a test, a swarm of locusts will attack your website. The behavior of each locust (or test user if you will) is defined by you and the swarming process is monitored from a web UI in real-time. This will help you battle test and identify bottlenecks in your code before letting real users in.
 
-  Locust is completely event-based, and therefore it’s possible to support thousands of concurrent users on a single machine. In contrast to many other event-based apps it doesn’t use callbacks. Instead it uses light-weight processes, through gevent. Each locust swarming your site is actually running inside its own process (or greenlet, to be correct). This allows you to write very expressive scenarios in Python without complicating your code with callbacks.
+> Locust is completely event-based, and therefore it’s possible to support thousands of concurrent users on a single machine. In contrast to many other event-based apps it doesn’t use callbacks. Instead it uses light-weight processes, through gevent. Each locust swarming your site is actually running inside its own process (or greenlet, to be correct). This allows you to write very expressive scenarios in Python without complicating your code with callbacks.
 
 Now that we have a rough idea of what Locust is, let's get it installed.
 
@@ -27,7 +29,7 @@ Now that we have a rough idea of what Locust is, let's get it installed.
 
 ## Install Locust
 
-Locust runs in a Python environment so we need to setup Python and its install tools if we don't already have them. Thankfully OS X and most Linux distros come with Python installed. 
+Locust runs in a Python environment so you need to setup Python and its package install tools, if you don't already have them. Thankfully OS X and most Linux distros come with Python installed.
 
 To verify that you have Python installed, open a terminal window and run the following command:
 
@@ -41,29 +43,11 @@ To run Locust you will need either Python 2.7.x or any version of Python 3 above
 
 Once you have Python installed, we will install several packages from [pypi](https://pypi.python.org/pypi).To do this, Python leverages Pip to install packages locally. To check if we have Pip installed open a terminal window and type
 
-    $ pip
+    $ pip --version
 
 You will see something like this if you have Pip installed:
 
-    Usage:
-      pip <command> [options]
-
-    Commands:
-      install                     Install packages.
-      download                    Download packages.
-      uninstall                   Uninstall packages.
-      freeze                      Output installed packages in requirements format.
-      list                        List installed packages.
-      show                        Show information about installed packages.
-      check                       Verify installed packages have compatible dependencies.
-      search                      Search PyPI for packages.
-      wheel                       Build wheels from your requirements.
-      hash                        Compute hashes of package archives.
-      completion                  A helper command used for command completion.
-      help                        Show help for commands.
-
-    General Options:
-    ...
+    pip 9.0.1 from /usr/lib/python2.7/site-packages (python 2.7)
 
 If you do not have Pip please visit the [Pip installation instructions](https://pip.pypa.io/en/stable/installing/).
 
@@ -73,7 +57,7 @@ Run this command to install Locust. ([Alternative methods here](http://docs.locu
 
     $ pip install locustio
 
-Now that we have Locust installed we can move on to running a Locust script. But first, we need a server to hit.
+Now that we have Locust installed we can create and run a Locust script. But first, we need a server to hit.
 
 ## Test Server
 
