@@ -61,32 +61,29 @@ Now that we have Locust installed we can create and run a Locust script. But fir
 
 ## Test Server
 
-I created a repo we will use to build out the server and test scripts. Within that repo you will find an [example_server](https://github.com/RealKinetic/locust_k8s/blob/master/examples/golang/example_server.go) program written in Go. If you are on OSX, and you trust random binaries from the internet, you can directly grab the binary [here](https://github.com/RealKinetic/locust_k8s/blob/main/example_server); otherwise clone the repo with the following command:
+I created a repo we will use to build out the server and test scripts. Within that repo you will find an [example_server](https://github.com/RealKinetic/locust_k8s/blob/master/examples/golang/example_server.go) program written in Go. If you are on OSX, and you trust binaries from the internet, you can grab the binary [here](https://github.com/RealKinetic/locust_k8s/blob/master/example_server); otherwise clone the repo with the following command:
 
     $ git clone git@github.com:RealKinetic/locust_k8s.git
+    $ cd locust_k8s
 
 To build the server, run:
 
-    $ go build example_server.go
-
-Once you have a binary by building or downloading it:
-
-    $ cd locust_k8s
+    $ go build examples/golang/example_server.go
 
 And run the following command to start the server:
 
     $ ./example_server
 
-This server will listen on port `8080`. You can test it by visiting http://localhost:8080. You should see a page with:
+This server will listen on port `8080`. You can test it by visiting [http://localhost:8080](http://localhost:8080/). You should see a page with:
 
 > Our example home page.
 
 There are two other endpoints exposed by our example server.
 
-* `/login` which takes a post request and returns `Login`. The server will output `Login Request` to stdout when this endpoint is hit.
-* `/profile` which takes a get request and returns `Profile`. The server will output `Profile Request` to stdout when this endpoint is hit.
+* [`/login`](http://localhost:8080/login) accepts `POST` requests and returns a plain text response "`Login.`". The server will output "`Login Request`" to stdout when this endpoint is hit.
+* [`/profile`](http://localhost:8080/profile) accepts `GET` requests and returns "`Profile.`". The server will output "`Profile Request`" to stdout when this endpoint is hit.
 
-Now that we have an example server, we can create the Locust file.
+Now that we have an example server, we can create the Locust test file.
 
 ## Running Locust
 
