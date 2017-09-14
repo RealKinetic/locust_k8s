@@ -10,24 +10,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Start with a base Golang image
-FROM golang
+from locust import HttpLocust, TaskSet, task
 
-MAINTAINER Beau Lyddon <beau.lyddon@realkinetic.com>
 
-# Add the external tasks directory into /example
-RUN mkdir example
-ADD example_server.go example
-WORKDIR example
+class UserBehavior(TaskSet):
 
-# Build the example executable
-RUN go build example_server.go
+    def on_start(self):
+        """ on_start is called when a Locust start before any task is scheduled """
+        self.login()
 
-# Set server to be executable
-RUN chmod 755 example_server
+    def login(self):
+        self.client.post("/login", {"username":"ellen_key", "password":"education"})
 
-# Expose the required port (8080)
-EXPOSE 8080
+    @task(2)
+    def index(self):
+        self.client.get("/")
 
-# Start our example service
-ENTRYPOINT ["./example_server"] 
+    @task(1)
+    def profile(self):
+        self.client.get("/profile")
+
+
+class WebsiteUser(HttpLocust):
+    task_set = UserBehavior
+    min_wait = 5000
+    max_wait = 9000

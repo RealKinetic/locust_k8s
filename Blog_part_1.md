@@ -25,7 +25,7 @@ I've quoted Locust’s high level description below but you can visit [their](ht
 
 Now that we have a rough idea of what Locust is, let's get it installed.
 
-** NOTE: If you don’t want to install Locust locally, skip down to the Docker section towards the bottom of this guide.
+**NOTE:** If you don’t want to install Locust locally, skip down to the Docker section towards the bottom of this guide.
 
 ## Install Locust
 
@@ -61,36 +61,37 @@ Now that we have Locust installed we can create and run a Locust script. But fir
 
 ## Test Server
 
-I have created a repo we will build out as we go. Within that repo you will find an example_server program written in Go (compiled on OSX). You can directly grab that binary [here](https://github.com/RealKinetic/locust_k8s/blob/49b221e52484c6e0d165490a3dbbf1fe4d2f9dce/example_server) or clone the repo with the following command: `git clone git@github.com:RealKinetic/locust_k8s.git`
+I created a repo we will use to build out the server and test scripts. Within that repo you will find an [example_server](https://github.com/RealKinetic/locust_k8s/blob/master/examples/golang/example_server.go) program written in Go. If you are on OSX, and you trust binaries from the internet, you can grab the binary [here](https://github.com/RealKinetic/locust_k8s/blob/master/example_server); otherwise clone the repo with the following command:
 
-Here is the Go code behind the file. It is also included in the repo if you would like to make changes or do not trust running a binary from the Internet. To build the go file run: `$ go build example_server.go`
-
-Once you have the binary or repo pulled down go to that directly:
-
+    $ git clone git@github.com:RealKinetic/locust_k8s.git
     $ cd locust_k8s
 
-And run the following command to run the server:
+To build the server, run:
+
+    $ go build examples/golang/example_server.go
+
+And run the following command to start the server:
 
     $ ./example_server
 
-This server will sit on port `8080`. You can test it by visiting http://localhost:8080. You should see a page with:
+This server will listen on port `8080`. You can test it by visiting [http://localhost:8080](http://localhost:8080/). You should see a page with:
 
-  Our example home page.
+> Our example home page.
 
-There are two other endpoints exposed by this example server.
+There are two other endpoints exposed by our example server.
 
-* `\login` which we will send a post request to and returns `Login. The server will output `Login Request` to stdout when this endpoint is hit.
-* `\profile` which we will send a get request to and returns `Profile`. The server will output `Profile Request` to stdout when this endpoint is hit.
+* [`/login`](http://localhost:8080/login) accepts `POST` requests and returns a plain text response "*Login.*". The server will output "`Login Request`" to stdout when this endpoint is hit.
+* [`/profile`](http://localhost:8080/profile) accepts `GET` requests and returns "*Profile.*". The server will output "`Profile Request`" to stdout when this endpoint is hit.
 
-Now that we have an example server to hit we can create the Locust file.
+Now that we have an example server, we can create the Locust test file.
 
 ## Running Locust
 
 For this example we can use the example provided by Locust in their [quick start documentation](http://docs.locust.io/en/latest/quickstart.html).
 
-You can use the `locustfile.py` in our example repo or create said file.
+You can use the `locustfile.py` in our example repo, or create the file yourself.
 
-Here's the code that you will need in `locustfile.py`:
+Your `locustfile.py` should contain the following:
 
     from locust import HttpLocust, TaskSet, task
 
@@ -100,7 +101,9 @@ Here's the code that you will need in `locustfile.py`:
             self.login()
 
         def login(self):
-            self.client.post("/login", {"username":"ellen_key", "password":"education"})
+            self.client.post("/login",
+                             {"username":"ellen_key",
+                              "password":"education"})
 
         @task(2)
         def index(self):
@@ -115,7 +118,7 @@ Here's the code that you will need in `locustfile.py`:
         min_wait = 5000
         max_wait = 9000
 
-You can learn more about what this file does in the Locust documentation and quick start walkthrough (highly recommended).
+The Locust documentation and [quick start documentation](http://docs.locust.io/en/latest/quickstart.html) provides an explanation of the contents. We highly recommend working through their docs to learn more.
 
 Now that we have our locustfile we can do a test.
 
@@ -123,27 +126,38 @@ First ensure your example server is running:
 
     $ ./example_server
 
-Then we run Locust and give it our file.
+Now, in a new terminal we will run Locust. We will pass it the name of our test file, `locustfile.py`, and tell it to run against our example server on port `8080` of `localhost`.
 
-    locust -f locustfile.py --host=http://localhost:8080
+    $ locust -f locustfile.py --host=http://localhost:8080
 
-We pass in the host of our example server which is running on port 8080 of localhost.
+With Locust running we can open the web user interface at: [http://localhost:8089](http://localhost:8089).
 
-With Locust running we can open the web user interface at: http://localhost:8089
+For this test, we will simulate 1 user and specify 1 for the hatch rate. Click the `Start swarming` button. You should now see something similar to the following in the terminal running example server:
 
-We can do a quick test by adding 1 user to simulate and 1 for a hatch rate. Then click the `Start swarming` button.
+    2017/09/13 15:24:33 Login Request
+    2017/09/13 15:24:33 Profile Request
+    2017/09/13 15:24:40 Profile Request
+    2017/09/13 15:24:46 Index Request
+    2017/09/13 15:24:55 Index Request
+    2017/09/13 15:25:00 Index Request
+    2017/09/13 15:25:07 Profile Request
+    2017/09/13 15:25:12 Index Request
 
-You should now see messages being sent to the stdout of your example server. In the Locust UI you will see a list of the endpoints being hit. You will see the request counts incrementing for `/` and `/profile`. There should not be failures being logged unless Locust is having issues connecting to your server.
+In the Locust UI you will see a list of the endpoints being hit. You will see the request counts incrementing for `/` and `/profile`. There should be no failures unless Locust is having issues connecting to your server.
+
+![Locust Screenshot](/locust-run.png)
 
 # Docker
 
-We're going to build and run our [Docker](https://www.docker.com/) containers locally first so go ahead and install Docker for your environment based off the directions on the [Docker](https://www.docker.com/) website.
+We're going to start by building and running our [containers](https://www.docker.com/what-container) locally using [Docker](https://www.docker.com/). Install Docker for your environment using the directions on the [Docker](https://www.docker.com/) website.
+
+**NOTE:** Before continuing, you should stop the two servers from the previous sections using `ctrl-c` in each terminal window.
 
 # Docker Environment
 
-We will have two containers running in our scenario: our example server and Locust instance. To support our locust container’s communication with our example server we need to configure a custom Docker network. Thankfully this is a simple process.
+We will run two containers: our service (our golang example server) and our Locust instance. To support our locust container’s communication with our example server we need to configure a custom Docker network. Thankfully this is a simple process.
 
-The following command will create a custom Docker network named `locustnw`
+The following command will create a custom Docker network named `locustnw`:
 
     $ docker network create --driver bridge locustnw
 
@@ -174,28 +188,36 @@ This will use the `Dockerfile` we've create in the `examples/golang` directory w
     # Build the example executable
     RUN go build example_server.go
 
-    # Set script to be executable
+    # Set the server to be executable
     RUN chmod 755 example_server
 
     # Expose the required port (8080)
     EXPOSE 8080
 
-    # Start Locust using LOCUS_OPTS environment variable
+    # Start our example service
     ENTRYPOINT ["./example_server"] 
 
-The `-t` argument allows us to tag our container with a name. In this case we're tagging it `goexample`.
+The `-t` argument tags our container with a name, `goexample`, in this case.
 
 Now that we've created our container we can run it with the following:
 
-    $ docker run -it -p=8080:8080 --name=exampleserver --network=locustnw goexample
+    $ docker run -it -p=8080:8080 \
+      --name=exampleserver \
+      --network=locustnw \
+      goexample
 
-- The `-p` flag exposes port 8080 within the container to the outside on the same port 8080. This is the port our example server is listenining on.
-- The `--name` flag  allows us to give a named identifier to the container. This allows us to reference this container by name as a host instead of by IP address. This will be critical when we run the locust container.
+- The `-p` flag exposes the container's port 8080 on localhost as port 8080. This is the port our example server is listening on.
+- The `--name` flag  allows us to give a named identifier to the container. This allows us to reference this container by name as a host instead of by IP address. This will be critical when we run the Locust container.
 - The `--network` argument tells Docker to use our custom network for this container.
 
-Since we exposed and mapped port 8080, you can test that our server is working by visiting http://localhost:8080.
+**NOTE:** If you get the following error, stop the `example_server` we started previously (or any other services on port 8080).
 
-Once you've verified that our example server container is running we can now build and run our Locust container. FYI if you ran Locust locally earlier you can re-run the same tests again now. Just point at the container version of our example server with the following `locust -f locustfile.py --host=http://localhost:8080`.
+    docker: Error response from daemon: driver failed programming external connectivity on endpoint exampleserver (...): Error starting userland proxy: Bind for 0.0.0.0:8080 failed: port is already allocated.
+
+
+Since we exposed and mapped port 8080, you can test that our server is working by visiting [http://localhost:8080](http://localhost:8080).
+
+Once you've verified your example server container is running, you can now build and run your Locust container.
 
 ## Locust Container
 
@@ -203,14 +225,14 @@ Building and running our locust container is similar to the process we used for 
 
     $ docker build docker -t locust-tasks
 
-This uses the `Dockerfile` in our `docker` directory. That file consists of:
+This builds the `Dockerfile` located in our `docker` directory. That file consists of:
 
     # Start with a base Python 2.7.8 image
     FROM python:2.7.13
     
     MAINTAINER Beau Lyddon <beau.lyddon@realkinetic.com>
     
-    # Add the external tasks directory into /tasks
+    # Add the external tasks directory into /locust-tasks
     RUN mkdir locust-tasks
     ADD locust-tasks /locust-tasks
     WORKDIR /locust-tasks
@@ -227,9 +249,9 @@ This uses the `Dockerfile` in our `docker` directory. That file consists of:
     # Start Locust using LOCUS_OPTS environment variable
     ENTRYPOINT ["./run.sh"] 
 
-A note: as you can see, this container doesn't run Locust directly but instead uses a `run.sh` file which lives in `docker/locust-tasks`. This file is important for part 2 of our tutorial, when we will run locust in a distributed mode.
+A note: this container doesn't run Locust directly but instead uses a `run.sh` file which lives in `docker/locust-tasks`. This file is important for part 2 of our tutorial where we will run locust in a distributed mode.
 
-We will discuss quickly one import part of that file. Looking at the contents of that file:
+We will briefly discuss one import part of the `run.sh` file:
 
     LOCUST="/usr/local/bin/locust"
     LOCUS_OPTS="-f /locust-tasks/locustfile.py --host=$TARGET_HOST"
@@ -245,21 +267,25 @@ We will discuss quickly one import part of that file. Looking at the contents of
     
     $LOCUST $LOCUS_OPTS
 
-You see that we rely on an environment variable named `$TARGET_HOST` to be the host url passed into our locustfile. This is what will allow us to communicate across containers within our Docker network. Let's look at how we do that.
+We rely on an environment variable named `$TARGET_HOST` being passed into our locustfile. This is key for us to communicate across containers within our Docker network.
 
-With that container built we can run it with a similar command as our dev server.
+With our container built, we can run it with a similar command as our example service.
 
-    $ docker run -it -p=8089:8089 -e "TARGET_HOST=http://exampleserver:8080" --network=locustnw locust-tasks:latest
+    $ docker run -it -p=8089:8089 \
+      -e "TARGET_HOST=http://exampleserver:8080" \
+      --network=locustnw locust-tasks:latest
 
-Once again we're exposing a port but this time it's port `8089`, the default locust port. We pass the same network command to ensure this container also runs on our custom Docker network. However: one additional argument we pass in is `-e`. This is the argument for passing environment variables in to the Docker container. In this case we're passing in `http://exampleserver:8080` as the variable `TARGET_HOST`. So now we can see how the `$TARGET_HOST` environment variable in our `run.sh` script comes into play. We also see how the custom Docker network and named containers allows us to use `exampleserver` as the host name versus attempting to find the containers IP address and passing that in. This simplifies things a great deal.
+Once again we're exposing a port but this time it's port `8089`, the default locust port. We pass the network name to ensure this container also runs on our custom `locustnw` network.
 
-Now that we have our locust server running we can visit http://localhost:8089 in a browser on our local machine to run locust via a container hitting our dev server also running within a container.
+We also pass an additional argument: `-e`. This argument sets environment variables inside the Docker container. In this case we're passing in `http://exampleserver:8080` as the variable `TARGET_HOST`. This is how the `$TARGET_HOST` environment variable needed by our `run.sh` script is set. We also see how the custom Docker network and named containers allow us to use `exampleserver` as the host name versus attempting to find the containers IP address and passing that in. This simplifies things a great deal.
+
+Now that we have our locust server running we can visit [http://localhost:8089](http://localhost:8089) in a browser on our local machine. This connects to our container which will test against our example server, also running within a container.
 
     $ open http://localhost:8089
 
 # Deployment
 
-We can obviously install Locust directly on any machine we'd like. Whether on bare metal, a VM, or in our case we're going to use [Docker](https://www.docker.com/) and [Google Container Engine (GKE)](https://www.docker.com/).
+We can install Locust directly on any machine we'd like. Bare metal, a VM, or, in our case, we're going to install into a [Docker](https://www.docker.com/) container and deploy the container to [Google Container Engine (GKE)](https://cloud.google.com/container-engine/).
 
 ## Google Container Engine
 
@@ -267,36 +293,41 @@ We can obviously install Locust directly on any machine we'd like. Whether on ba
 
 * Google Cloud Platform account
 * Install and setup [Google Cloud SDK](https://cloud.google.com/sdk/)
+** Be sure to run `$ gcloud init` after installing `gcloud`.
 
 **Note:** when installing the Google Cloud SDK you will need to enable the following additional components:
 
-* `Compute Engine Command Line Interface`
-* `kubectl`
+* [`Compute Engine Command Line Interface`](https://cloud.google.com/compute/docs/gcloud-compute/)
+* `kubectl` (`$ gcloud components install kubectl`)
 
-Before continuing, you can also set your preferred zone and project:
+Set an environment variable to the cloud project you will be using:
+
+    $ export $PROJECTID
+
+Before continuing, you can also [set your preferred zone and project](https://cloud.google.com/container-engine/docs/quickstart#optional_run_this_tutorial_locally_with_gcloud):
 
     $ gcloud config set compute/zone ZONE
-    $ gcloud config set project PROJECT-ID
+    $ gcloud config set project $PROJECTID
 
 ### Deploying our example container
 
-You can use the directions directly from the [Google Container Engine Quickstart](https://cloud.google.com/container-engine/docs/quickstart) or follow what we have below.
+We have summarized the key steps needed to deploy a container from the [Google Container Engine Quickstart](https://cloud.google.com/container-engine/docs/quickstart) below. If you would like a more thorough walkthrough, view the quickstart guide.
 
-First up we're going to create a cluster on GKE for our container to run in:
+First up we're going to create a cluster on GKE:
 
     $ gcloud container clusters create example-cluster
 
 Then we want to give a new tag to our example container that matches where we will be pushing it in the [Google Container Registry](https://cloud.google.com/container-registry/). The Google Container Registry is Google's hosted Docker Registry. You can use any Docker registry that you'd prefer.
 
-    $ docker tag goexample gcr.io/PROJECT-ID/goexample
+    $ docker tag goexample gcr.io/$PROJECTID/goexample
 
 Now that we've tagged our image we can push it to the registry with the following:
 
-    $ gcloud docker -- push gcr.io/PROJECT-ID/goexample
+    $ gcloud docker -- push gcr.io/$PROJECTID/goexample
 
 With that pushed we can now run the image:
 
-    $ kubectl run example-node --image=gcr.io/PROJECT-ID/goexample:latest --port=8080
+    $ kubectl run example-node --image=gcr.io/$PROJECTID/goexample:latest --port=8080
 
 This is a similar command to our local Docker commands where we give it a name and expose a port. In this case however we're using `kubectl` which is the [Kubernetes Command Line Inteface](https://kubernetes.io/docs/user-guide/kubectl-overview/).
 
