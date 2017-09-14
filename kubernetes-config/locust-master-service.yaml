@@ -1,0 +1,60 @@
+# TAKEN: https://github.com/GoogleCloudPlatform/distributed-load-testing-using-kubernetes/blob/master/kubernetes-config/locust-master-service.yaml
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: locust-master
+  labels:
+    name: locust
+    role: master
+spec:
+  ports:
+    - port: 8089
+      targetPort: loc-master-web
+      protocol: TCP
+      name: loc-master-web
+    - port: 5557
+      targetPort: loc-master-p1
+      protocol: TCP
+      name: loc-master-p1
+    - port: 5558
+      targetPort: loc-master-p2
+      protocol: TCP
+      name: loc-master-p2
+    - port: 5559
+      targetPort: loc-master-p3
+      protocol: TCP
+      name: loc-master-p3
+    - port: 5560
+      targetPort: loc-master-p4
+      protocol: TCP
+      name: loc-master-p4
+    - port: 5561
+      targetPort: loc-master-p5
+      protocol: TCP
+      name: loc-master-p5
+    - port: 5562
+      targetPort: loc-master-p6
+      protocol: TCP
+      name: loc-master-p6
+    - port: 5563
+      targetPort: loc-master-p7
+      protocol: TCP
+      name: loc-master-p7
+  selector:
+    name: locust
+    role: master
+  type: LoadBalancer

@@ -1,0 +1,67 @@
+# TAKEN: https://github.com/GoogleCloudPlatform/distributed-load-testing-using-kubernetes/blob/master/kubernetes-config/locust-master-controller.yaml
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+kind: ReplicationController
+apiVersion: v1
+metadata:
+  name: locust-master
+  labels:
+    name: locust
+    role: master
+spec:
+  replicas: 1
+  selector:
+    name: locust
+    role: master
+  template:
+    metadata:
+      name: locust
+      labels:
+        name: locust
+        role: master
+    spec:
+      containers:
+        - name: locust
+          image: gcr.io/GCP_PROJECT_ID/locust-tasks:latest
+          env:
+            - name: LOCUST_MODE
+              value: master
+            - name: TARGET_HOST
+              value: http://example.com
+          ports:
+            - name: loc-master-web
+              containerPort: 8089
+              protocol: TCP
+            - name: loc-master-p1
+              containerPort: 5557
+              protocol: TCP
+            - name: loc-master-p2
+              containerPort: 5558
+              protocol: TCP
+            - name: loc-master-p3
+              containerPort: 5559
+              protocol: TCP
+            - name: loc-master-p4
+              containerPort: 5560
+              protocol: TCP
+            - name: loc-master-p5
+              containerPort: 5561
+              protocol: TCP
+            - name: loc-master-p6
+              containerPort: 5562
+              protocol: TCP
+            - name: loc-master-p7
+              containerPort: 5563
+              protocol: TCP
