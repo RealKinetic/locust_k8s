@@ -285,7 +285,7 @@ Now that we have our locust server running we can visit [http://localhost:8089](
 
 # Deployment
 
-We can install Locust directly on any machine we'd like. Bare metal, a VM, or, in our case, we're going to use [Docker](https://www.docker.com/) and [Google Container Engine (GKE)](https://cloud.google.com/container-engine/).
+We can install Locust directly on any machine we'd like. Bare metal, a VM, or, in our case, we're going to install into a [Docker](https://www.docker.com/) container and deploy the container to [Google Container Engine (GKE)](https://cloud.google.com/container-engine/).
 
 ## Google Container Engine
 
@@ -293,22 +293,24 @@ We can install Locust directly on any machine we'd like. Bare metal, a VM, or, i
 
 * Google Cloud Platform account
 * Install and setup [Google Cloud SDK](https://cloud.google.com/sdk/)
+** Be sure to run `$ gcloud init` after installing `gcloud`.
 
 **Note:** when installing the Google Cloud SDK you will need to enable the following additional components:
 
-* `Compute Engine Command Line Interface`
-* `kubectl`
+* [`Compute Engine Command Line Interface`](https://cloud.google.com/compute/docs/gcloud-compute/)
+* `kubectl` (`$ gcloud components install kubectl`)
 
-Before continuing, you can also set your preferred zone and project:
+
+Before continuing, you can also [set your preferred zone and project](https://cloud.google.com/container-engine/docs/quickstart#optional_run_this_tutorial_locally_with_gcloud):
 
     $ gcloud config set compute/zone ZONE
     $ gcloud config set project PROJECT-ID
 
 ### Deploying our example container
 
-You can use the directions directly from the [Google Container Engine Quickstart](https://cloud.google.com/container-engine/docs/quickstart) or follow what we have below.
+We have summarized the key steps needed to deploy a container from the [Google Container Engine Quickstart](https://cloud.google.com/container-engine/docs/quickstart) below. If you would like a more thorough walkthrough, view the quickstart guide.
 
-First up we're going to create a cluster on GKE for our container to run in:
+First up we're going to create a cluster on GKE:
 
     $ gcloud container clusters create example-cluster
 
