@@ -300,11 +300,14 @@ We can install Locust directly on any machine we'd like. Bare metal, a VM, or, i
 * [`Compute Engine Command Line Interface`](https://cloud.google.com/compute/docs/gcloud-compute/)
 * `kubectl` (`$ gcloud components install kubectl`)
 
+Set an environment variable to the cloud project you will be using:
+
+    $ export $PROJECTID
 
 Before continuing, you can also [set your preferred zone and project](https://cloud.google.com/container-engine/docs/quickstart#optional_run_this_tutorial_locally_with_gcloud):
 
     $ gcloud config set compute/zone ZONE
-    $ gcloud config set project PROJECT-ID
+    $ gcloud config set project $PROJECTID
 
 ### Deploying our example container
 
@@ -316,15 +319,15 @@ First up we're going to create a cluster on GKE:
 
 Then we want to give a new tag to our example container that matches where we will be pushing it in the [Google Container Registry](https://cloud.google.com/container-registry/). The Google Container Registry is Google's hosted Docker Registry. You can use any Docker registry that you'd prefer.
 
-    $ docker tag goexample gcr.io/PROJECT-ID/goexample
+    $ docker tag goexample gcr.io/$PROJECTID/goexample
 
 Now that we've tagged our image we can push it to the registry with the following:
 
-    $ gcloud docker -- push gcr.io/PROJECT-ID/goexample
+    $ gcloud docker -- push gcr.io/$PROJECTID/goexample
 
 With that pushed we can now run the image:
 
-    $ kubectl run example-node --image=gcr.io/PROJECT-ID/goexample:latest --port=8080
+    $ kubectl run example-node --image=gcr.io/$PROJECTID/goexample:latest --port=8080
 
 This is a similar command to our local Docker commands where we give it a name and expose a port. In this case however we're using `kubectl` which is the [Kubernetes Command Line Inteface](https://kubernetes.io/docs/user-guide/kubectl-overview/).
 
