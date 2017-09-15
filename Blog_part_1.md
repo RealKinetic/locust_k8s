@@ -201,7 +201,7 @@ The `-t` argument tags our container with a name, `goexample`, in this case.
 
 Now that we've created our container we can run it with the following:
 
-    $ docker run -it -p=8080:8080 \
+    $ docker run -it --rm -p=8080:8080 \
       --name=exampleserver \
       --network=locustnw \
       goexample
@@ -271,7 +271,7 @@ We rely on an environment variable named `$TARGET_HOST` being passed into our lo
 
 With our container built, we can run it with a similar command as our example service.
 
-    $ docker run -it -p=8089:8089 \
+    $ docker run -it --rm -p=8089:8089 \
       -e "TARGET_HOST=http://exampleserver:8080" \
       --network=locustnw locust-tasks:latest
 
@@ -347,7 +347,7 @@ With that External IP address, open a browser to view your service running on GK
 
 Test your newly deployed server with the following:
 
-    $ docker run -it -p=8089:8089 -e "TARGET_HOST=http://EXTERNAL-IP:8080" --network=locustnw locust-tasks:latest 
+    $ docker run -it --rm -p=8089:8089 -e "TARGET_HOST=http://EXTERNAL-IP:8080" --network=locustnw locust-tasks:latest 
 
 **NOTE:** Use the `External IP` from the earlier command (`$ kubectl get service example-node`).
 
