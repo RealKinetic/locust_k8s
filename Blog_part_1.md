@@ -383,4 +383,4 @@ Once that's been removed we can then delete the cluster itself:
 
 # Part 1 Complete
 
-We now have a working example_server and a Locust file we can use to load test that server. Locust is multi-threaded, and can create a decent amount of traffic, it is limited by the single machine's resources. The true power of Locust comes in its ability to distribute out over multiple machines. However, creating a clustered environment is more involved. In part two we'll walk through leveraging Google Container Engine and Locust's distributed mode to build a maintainable, distributed environment to run larger load tests from.
+We now have a working example_server and a Locust file we can use to load test that server. Locust is multi-threaded, and can create a decent amount of traffic, but it is limited by the single machine's resources. The true power of Locust comes in its ability to distribute out over multiple machines. However, creating a clustered environment is more involved. In part two we'll walk through leveraging Google Container Engine and Locust's distributed mode to build a maintainable, distributed environment to run larger load tests from.
