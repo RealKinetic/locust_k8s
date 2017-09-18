@@ -169,6 +169,8 @@ Now that we have our network setup let's create our example server container.
 
 ## Example Server Container
 
+You can either build an image of our example server or you can pull an existing image down from [Dockerhub](https://hub.docker.com). Dockerhub is a repository of docker images that you can push and pull images to and from.
+
 To build our example server run the following:
 
     $ docker build examples/golang -t goexample
@@ -199,6 +201,10 @@ This will use the `Dockerfile` we've create in the `examples/golang` directory w
 
 The `-t` argument tags our container with a name, `goexample`, in this case.
 
+If you would like to pull the [image](https://hub.docker.com/r/lyddonb/goexample/) down instead run:
+
+    $ docker pull lyddonb/goexample
+
 Now that we've created our container we can run it with the following:
 
     $ docker run -it -p=8080:8080 \
@@ -221,7 +227,7 @@ Once you've verified your example server container is running, you can now build
 
 ## Locust Container
 
-Building and running our locust container is similar to the process we used for our example server. First we build the container image with the following:
+Running our locust container is similar to the process we used for our example server. Once again we can either pull or build the container image. To build run the following:
 
     $ docker build docker -t locust-tasks
 
@@ -250,6 +256,10 @@ This builds the `Dockerfile` located in our `docker` directory. That file consis
     ENTRYPOINT ["./run.sh"] 
 
 A note: this container doesn't run Locust directly but instead uses a `run.sh` file which lives in `docker/locust-tasks`. This file is important for part 2 of our tutorial where we will run locust in a distributed mode.
+
+To pull the [image](https://hub.docker.com/r/lyddonb/locust-tasks/):
+
+    $ docker pull lyddonb/locust-tasks
 
 We will briefly discuss one import part of the `run.sh` file:
 
