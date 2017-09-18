@@ -304,7 +304,7 @@ Set an environment variable to the cloud project you will be using:
 
     $ export $PROJECTID
 
-Before continuing, you can also [set your preferred zone and project](https://cloud.google.com/container-engine/docs/quickstart#optional_run_this_tutorial_locally_with_gcloud):
+Before continuing, if you did not run `gcloud init` and set your defaults, you can also [set your preferred zone and project](https://cloud.google.com/container-engine/docs/quickstart#optional_run_this_tutorial_locally_with_gcloud):
 
     $ gcloud config set compute/zone ZONE
     $ gcloud config set project $PROJECTID
@@ -317,11 +317,11 @@ First up we're going to create a cluster on GKE:
 
     $ gcloud container clusters create example-cluster
 
-Then we want to give a new tag to our example container that matches where we will be pushing it in the [Google Container Registry](https://cloud.google.com/container-registry/). The Google Container Registry is Google's hosted Docker Registry. You can use any Docker registry that you'd prefer.
+Next, we will tag our example container that we will be pushing it in the [Google Container Registry](https://cloud.google.com/container-registry/). Google Container Registry is Google's hosted Docker Registry. You can use any Docker registry that you'd prefer.
 
     $ docker tag goexample gcr.io/$PROJECTID/goexample
 
-Now that we've tagged our image we can push it to the registry with the following:
+Now that we've tagged our image, we can push it to the registry with the following:
 
     $ gcloud docker -- push gcr.io/$PROJECTID/goexample
 
@@ -329,40 +329,41 @@ With that pushed we can now run the image:
 
     $ kubectl run example-node --image=gcr.io/$PROJECTID/goexample:latest --port=8080
 
-This is a similar command to our local Docker commands where we give it a name and expose a port. In this case however we're using `kubectl` which is the [Kubernetes Command Line Inteface](https://kubernetes.io/docs/user-guide/kubectl-overview/).
+This is a similar command to our local Docker command, we assigned the container a name and exposed a port. In this case however we're using `kubectl` which is the [Kubernetes Command Line Inteface](https://kubernetes.io/docs/user-guide/kubectl-overview/).
 
-Expose the container. Note that the type="LoadBalancer" option in kubectl requests that Google Cloud Platform provision a load balancer for your container, which is billed per the regular [Load Balancer pricing](https://cloud.google.com/compute/pricing#lb).
+Next we expose the container. Note that the `--type="LoadBalancer"` option in kubectl requests that Google Cloud Platform provision a load balancer for your container, which is billed per the regular [Load Balancer pricing](https://cloud.google.com/compute/pricing#lb).
 
     $ kubectl expose deployment example-node --type="LoadBalancer"
 
-Once we've exposed our container we're going to get the IP address for it by running the following:
+Once you've exposed your container, get the IP address by running the following:
 
     $ kubectl get service example-node
 
-With that IP address we can open a browser to view our service running on GKE:
+With that External IP address, open a browser to view your service running on GKE:
 
     $ open http://EXTERNAL-IP:8080
 
 ### Test with local locust
 
-We can use our local locust container to test our newly deployed server with the following:
+Test your newly deployed server with the following:
 
-    # Take the EXTERNAL-IP listed from the earlier command and use here
     $ docker run -it -p=8089:8089 -e "TARGET_HOST=http://EXTERNAL-IP:8080" --network=locustnw locust-tasks:latest 
+
+**NOTE:** Use the `External IP` from the earlier command (`$ kubectl get service example-node`).
 
 We're once again taking advantage of the `$TARGET_HOST` environment variable.
 
-To test via locust once again open locust in a browser http://localhost:8089
+Open locust in a browser [http://localhost:8089](http://localhost:8089):
 
     $ open http://localhost:8089
 
-To run locust on GKE you can use the exact same process for the example server just replacing it with the locust container image. You can run it within the same cluster or create a new cluster if you'd like. Obviously in a production environment,  to get a more realistic representation, you'd want to separate your Load tester from your system.
+To run locust on GKE, follow the same process as for the example server. You will need to replace `goexample` with the locust container image `locus-tasks`. You can run Locust within the same cluster or create a new cluster. In a real environment, to get a more realistic representation, separate your Load tester from the system under test.
 
 ### Cleanup
 
-Since having these containers running will cost you money, you'll want to remove them when you are done. The clean up process is straight forward as well.
+Having these containers running will cost you money, remove them when you are done.
 
-First we're going to delete our example-node from the cluster:
+First delete the example-node from the cluster:
 
     $ kubectl delete service example-node
 
@@ -371,4 +372,5 @@ Once that's been removed we can then delete the cluster itself:
     $ gcloud container clusters delete example-cluster
 
 # Part 1 Complete
-We now have a working example_server and a Locust file to run against that server. And while Locust is multi-threaded and can create a decent amount of traffic it is limited by the single machine's resources. Even pushing it to a powerful hosted machine is going to hit limitations. The true power of Locust comes in its ability to distribute out over multiple machines. However creating clustered environments can be a bit of a pain. Thankfully GKE makes this a simple process. In part two we'll walk through leveraging Google Compute Engine (Kubernetes) and Locust's distributed mode to give us a maintainable distributed environment to run our load tests from.
+
+We now have a working example_server and a Locust file we can use to load test that server. Locust is multi-threaded, and can create a decent amount of traffic, it is limited by the single machine's resources. The true power of Locust comes in its ability to distribute out over multiple machines. However, creating a clustered environment is more involved. In part two we'll walk through leveraging Google Container Engine and Locust's distributed mode to build a maintainable, distributed environment to run larger load tests from.
