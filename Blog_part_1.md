@@ -312,7 +312,7 @@ We can install Locust directly on any machine we'd like. Bare metal, a VM, or, i
 
 Set an environment variable to the cloud project you will be using:
 
-    $ export $PROJECTID
+    $ export PROJECTID=<YOUR_PROJECT_ID>
 
 Before continuing, if you did not run `gcloud init` and set your defaults, you can also [set your preferred zone and project](https://cloud.google.com/container-engine/docs/quickstart#optional_run_this_tutorial_locally_with_gcloud):
 
