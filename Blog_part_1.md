@@ -151,7 +151,7 @@ In the Locust UI you will see a list of the endpoints being hit. You will see th
 
 We're going to start by building and running our [containers](https://www.docker.com/what-container) locally using [Docker](https://www.docker.com/). Install Docker for your environment using the directions on the [Docker](https://www.docker.com/) website.
 
-**NOTE:** Before continuing, you should stop the two servers from the previous sections using `ctrl-c` in each terminal window.
+**NOTE:** Before continuing, you should stop the `example_server` from the previous sections using `ctrl-c` in its terminal window.
 
 # Docker Environment
 
