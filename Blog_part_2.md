@@ -1,17 +1,17 @@
 Docker and Kubernetes
 =====================
 
-In Part 1 we walked through getting setup with Locust. We used it locally and we deployed it and our example server to Google Container Engine. In Part 2 we're going to take the same Docker image we used in Part 1 and deploy it in a distributed fashion to leverage Locust's distributed mode.
+In Part 1 we walked through setting up Locust. We ran a single instance locally and then we deployed it as a single node to Google Container Engine (GKE). In this post, we're going leverage GKE to deploy and run Locust in distributed mode.
 
 # Distributed Locust
 
-Locust distributed mode allows you to run your locustfiles on multiple machines. You can take a look at the documentation [here](http://docs.locust.io/en/latest/running-locust-distributed.html) to learn more if you'd like. But it's a pretty straightforward setup articulated from their docs:
+Locust distributed mode allows you to concurrently run your locustfiles on multiple machines. You can take a look at the [documentation](http://docs.locust.io/en/latest/running-locust-distributed.html) to learn more if you'd like, but it is pretty straightforward to setup. From the Locust docs:
 
-    To do this, you start one instance of Locust in master mode using the --master flag. This is the instance that will be running Locust’s web interface where you start the test and see live statistics. The master node doesn’t simulate any users itself. Instead you have to start one or —most likely—multiple slave Locust nodes using the --slave flag, together with the --master-host (to specify the IP/hostname of the master node).
+    [S]tart one instance of Locust in master mode using the --master flag. This is the instance that will be running Locust’s web interface where you start the test and see live statistics. The master node doesn’t simulate any users itself. Instead you have to start one or —most likely— multiple slave Locust nodes using the --slave flag, together with the --master-host (to specify the IP/hostname of the master node).
 
     A common set up is to run a single master on one machine, and then run one slave instance per processor core, on the slave machines.
 
-This design is a nice match for Kubernetes and Google Container Engine. All we need to do is create some configuration files and walk through a couple of steps and then we'll be running with as many machines as we'd like.
+This design fits well with Kubernetes and Google Container Engine. All we need to do is create a few configuration files, walk through a couple of steps, and then we'll be running with as many machines as we'd like.
 
 ## Distributed Locust on Google Container Engine
 
