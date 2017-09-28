@@ -1,37 +1,37 @@
 Docker and Kubernetes
 =====================
 
-In Part 1 we walked through getting setup with Locust. We used it locally and we deployed it and our example server to Google Container Engine. In Part 2 we're going to take the same Docker image we used in Part 1 and deploy it in a distributed fashion to leverage Locust's distributed mode.
+In Part 1 we walked through setting up Locust. We ran a single instance locally and then we deployed it as a single node to Google Container Engine (GKE). In this post, we're going leverage GKE to deploy and run Locust in distributed mode.
 
 # Distributed Locust
 
-Locust distributed mode allows you to run your locustfiles on multiple machines. You can take a look at the documentation [here](http://docs.locust.io/en/latest/running-locust-distributed.html) to learn more if you'd like. But it's a pretty straightforward setup articulated from their docs:
+Locust distributed mode allows you to concurrently run your locustfiles on multiple machines. You can take a look at the [documentation](http://docs.locust.io/en/latest/running-locust-distributed.html) to learn more if you'd like, but it is pretty straightforward to setup. From the Locust docs:
 
-    To do this, you start one instance of Locust in master mode using the --master flag. This is the instance that will be running Locust’s web interface where you start the test and see live statistics. The master node doesn’t simulate any users itself. Instead you have to start one or —most likely—multiple slave Locust nodes using the --slave flag, together with the --master-host (to specify the IP/hostname of the master node).
+    [S]tart one instance of Locust in master mode using the --master flag. This is the instance that will be running Locust’s web interface where you start the test and see live statistics. The master node doesn’t simulate any users itself. Instead you have to start one or —most likely— multiple slave Locust nodes using the --slave flag, together with the --master-host (to specify the IP/hostname of the master node).
 
     A common set up is to run a single master on one machine, and then run one slave instance per processor core, on the slave machines.
 
-This design is a nice match for Kubernetes and Google Container Engine. All we need to do is create some configuration files and walk through a couple of steps and then we'll be running with as many machines as we'd like.
+This design fits well with Kubernetes and Google Container Engine. All we need to do is create a few configuration files, walk through a couple of steps, and then we'll be running with as many machines as we'd like.
 
 ## Distributed Locust on Google Container Engine
 
-In this example we'll use 7 worker nodes along with a single master node.
+In this example we'll use 7 worker nodes with a single master node.
 
 ### Configuration Files
 
-The configurations for our master, service definition and workers are in [kubernetes-config](/kubernetes-config). You should see the following files in that directory:
+The configurations for our master, service definition and workers are in [kubernetes-config](https://github.com/RealKinetic/locust_k8s/tree/part-2/kubernetes-config). You should see the following files in that directory:
 
-  - locust-master-controller.yaml
-  - locust-master-service.yaml
-  - locust-worker-controller.yaml
+  - [locust-master-controller.yaml](https://github.com/RealKinetic/locust_k8s/blob/part-2/kubernetes-config/locust-master-controller.yaml)
+  - [locust-master-service.yaml](https://github.com/RealKinetic/locust_k8s/blob/part-2/kubernetes-config/locust-master-service.yaml)
+  - [locust-worker-controller.yaml](https://github.com/RealKinetic/locust_k8s/blob/part-2/kubernetes-config/locust-worker-controller.yaml)
 
 #### Master Controller (Replication Controller)
 
-The master controller file (locust-master-controller.yaml) is configuring a [Kubernetes Replication Controller](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/). From the docs:
+The master controller file ([locust-master-controller.yaml](https://github.com/RealKinetic/locust_k8s/blob/part-2/kubernetes-config/locust-master-controller.yaml)) configures a [Kubernetes Replication Controller](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/). From the docs:
 
     A ReplicationController ensures that a specified number of pod replicas are running at any one time. In other words, a ReplicationController makes sure that a pod or a homogeneous set of pods is always up and available.
 
-The replication controller is going to be what ensures that we have the correct number of pods running for our cluster.
+The replication controller ensures we always have the correct number of pods running for our cluster.
 
 In our controller we've defined 1 replica that has 8 containers. They will all use the same Docker image with the same environment variables:
 
