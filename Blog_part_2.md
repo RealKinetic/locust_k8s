@@ -15,23 +15,23 @@ This design fits well with Kubernetes and Google Container Engine. All we need t
 
 ## Distributed Locust on Google Container Engine
 
-In this example we'll use 7 worker nodes along with a single master node.
+In this example we'll use 7 worker nodes with a single master node.
 
 ### Configuration Files
 
-The configurations for our master, service definition and workers are in [kubernetes-config](/kubernetes-config). You should see the following files in that directory:
+The configurations for our master, service definition and workers are in [kubernetes-config](https://github.com/RealKinetic/locust_k8s/tree/part-2/kubernetes-config). You should see the following files in that directory:
 
-  - locust-master-controller.yaml
-  - locust-master-service.yaml
-  - locust-worker-controller.yaml
+  - [locust-master-controller.yaml](https://github.com/RealKinetic/locust_k8s/blob/part-2/kubernetes-config/locust-master-controller.yaml)
+  - [locust-master-service.yaml](https://github.com/RealKinetic/locust_k8s/blob/part-2/kubernetes-config/locust-master-service.yaml)
+  - [locust-worker-controller.yaml](https://github.com/RealKinetic/locust_k8s/blob/part-2/kubernetes-config/locust-worker-controller.yaml)
 
 #### Master Controller (Replication Controller)
 
-The master controller file (locust-master-controller.yaml) is configuring a [Kubernetes Replication Controller](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/). From the docs:
+The master controller file ([locust-master-controller.yaml](https://github.com/RealKinetic/locust_k8s/blob/part-2/kubernetes-config/locust-master-controller.yaml)) configures a [Kubernetes Replication Controller](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/). From the docs:
 
     A ReplicationController ensures that a specified number of pod replicas are running at any one time. In other words, a ReplicationController makes sure that a pod or a homogeneous set of pods is always up and available.
 
-The replication controller is going to be what ensures that we have the correct number of pods running for our cluster.
+The replication controller ensures we always have the correct number of pods running for our cluster.
 
 In our controller we've defined 1 replica that has 8 containers. They will all use the same Docker image with the same environment variables:
 
