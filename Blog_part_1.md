@@ -151,7 +151,7 @@ In the Locust UI you will see a list of the endpoints being hit. You will see th
 
 We're going to start by building and running our [containers](https://www.docker.com/what-container) locally using [Docker](https://www.docker.com/). Install Docker for your environment using the directions on the [Docker](https://www.docker.com/) website.
 
-**NOTE:** Before continuing, you should stop the two servers from the previous sections using `ctrl-c` in each terminal window.
+**NOTE:** Before continuing, you should stop the `example_server` from the previous sections using `ctrl-c` in its terminal window.
 
 # Docker Environment
 
@@ -168,6 +168,8 @@ You can inspect this network with the following command:
 Now that we have our network setup let's create our example server container.
 
 ## Example Server Container
+
+You can either build an image of our example server or you can pull an existing image down from [Dockerhub](https://hub.docker.com). Dockerhub is a repository of docker images that you can push and pull images to and from.
 
 To build our example server run the following:
 
@@ -199,9 +201,13 @@ This will use the `Dockerfile` we've create in the `examples/golang` directory w
 
 The `-t` argument tags our container with a name, `goexample`, in this case.
 
+If you would like to pull the [image](https://hub.docker.com/r/lyddonb/goexample/) down instead run:
+
+    $ docker pull lyddonb/goexample
+
 Now that we've created our container we can run it with the following:
 
-    $ docker run -it -p=8080:8080 \
+    $ docker run -it --rm -p=8080:8080 \
       --name=exampleserver \
       --network=locustnw \
       goexample
@@ -221,7 +227,7 @@ Once you've verified your example server container is running, you can now build
 
 ## Locust Container
 
-Building and running our locust container is similar to the process we used for our example server. First we build the container image with the following:
+Running our locust container is similar to the process we used for our example server. Once again we can either pull or build the container image. To build run the following:
 
     $ docker build docker -t locust-tasks
 
@@ -251,6 +257,10 @@ This builds the `Dockerfile` located in our `docker` directory. That file consis
 
 A note: this container doesn't run Locust directly but instead uses a `run.sh` file which lives in `docker/locust-tasks`. This file is important for part 2 of our tutorial where we will run locust in a distributed mode.
 
+To pull the [image](https://hub.docker.com/r/lyddonb/locust-tasks/):
+
+    $ docker pull lyddonb/locust-tasks
+
 We will briefly discuss one import part of the `run.sh` file:
 
     LOCUST="/usr/local/bin/locust"
@@ -271,7 +281,7 @@ We rely on an environment variable named `$TARGET_HOST` being passed into our lo
 
 With our container built, we can run it with a similar command as our example service.
 
-    $ docker run -it -p=8089:8089 \
+    $ docker run -it --rm -p=8089:8089 \
       -e "TARGET_HOST=http://exampleserver:8080" \
       --network=locustnw locust-tasks:latest
 
@@ -302,7 +312,7 @@ We can install Locust directly on any machine we'd like. Bare metal, a VM, or, i
 
 Set an environment variable to the cloud project you will be using:
 
-    $ export $PROJECTID
+    $ export PROJECTID=<YOUR_PROJECT_ID>
 
 Before continuing, if you did not run `gcloud init` and set your defaults, you can also [set your preferred zone and project](https://cloud.google.com/container-engine/docs/quickstart#optional_run_this_tutorial_locally_with_gcloud):
 
@@ -347,7 +357,7 @@ With that External IP address, open a browser to view your service running on GK
 
 Test your newly deployed server with the following:
 
-    $ docker run -it -p=8089:8089 -e "TARGET_HOST=http://EXTERNAL-IP:8080" --network=locustnw locust-tasks:latest 
+    $ docker run -it --rm -p=8089:8089 -e "TARGET_HOST=http://EXTERNAL-IP:8080" --network=locustnw locust-tasks:latest 
 
 **NOTE:** Use the `External IP` from the earlier command (`$ kubectl get service example-node`).
 
@@ -373,4 +383,4 @@ Once that's been removed we can then delete the cluster itself:
 
 # Part 1 Complete
 
-We now have a working example_server and a Locust file we can use to load test that server. Locust is multi-threaded, and can create a decent amount of traffic, it is limited by the single machine's resources. The true power of Locust comes in its ability to distribute out over multiple machines. However, creating a clustered environment is more involved. In part two we'll walk through leveraging Google Container Engine and Locust's distributed mode to build a maintainable, distributed environment to run larger load tests from.
+We now have a working example_server and a Locust file we can use to load test that server. Locust is multi-threaded, and can create a decent amount of traffic, but it is limited by the single machine's resources. The true power of Locust comes in its ability to distribute out over multiple machines. However, creating a clustered environment is more involved. In part two we'll walk through leveraging Google Container Engine and Locust's distributed mode to build a maintainable, distributed environment to run larger load tests from.
