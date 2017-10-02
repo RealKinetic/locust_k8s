@@ -1,7 +1,7 @@
 Docker and Kubernetes
 =====================
 
-In Part 1 we walked through setting up Locust. We ran a single instance locally and then we deployed it as a single node to Google Container Engine (GKE). In this post, we're going leverage GKE to deploy and run Locust in distributed mode.
+In Part 1 we walked through setting up Locust. We ran a single instance locally and then we deployed it as a single node to Google Container Engine (GKE). In this post, we're going leverage GKE (and Kubernetes) to deploy and run Locust in distributed mode.
 
 # Distributed Locust
 
@@ -11,9 +11,16 @@ Locust distributed mode allows you to concurrently run your locustfiles on multi
 
     A common set up is to run a single master on one machine, and then run one slave instance per processor core, on the slave machines.
 
-This design fits well with Kubernetes and Google Container Engine. All we need to do is create a few configuration files, walk through a couple of steps, and then we'll be running with as many machines as we'd like.
+This design ends up fitting well with Kubernetes and Google Container Engine. We can create a single master node and then as many worker nodes as we deem necessary. The nice thing with Kubernetes is we can spin up and down the number of nodes as we go. All we need to do is create a few configuration files, walk through a couple of steps, and then we'll be running with as many machines as we'd like.
 
 ## Distributed Locust on Google Container Engine
+
+A few notes on GKE and Kubernetes. Between GKE, Kubernetes and Docker we have three ecosystems that we are integrating here. Not only that but Docker is platform agnostic and is building it's own runtime eco-system outside of Kubernetes. Kubernetes while started within Google is a true open source project that is not only attempting to be platform agnostic so it can run in any environment but is also container agnostic. So it supports other container types beyond Docker. There are real positives in these designs as they allow us to plugin the pieces that make the most sense for our use case. However the negative is the APIs and documentation can be difficult. Some commands that appear to be Kubernetes specific will trigger downstream GKE side effects. You can end up with some weird bash commands where you're nesting commands down to docker via Kubernetes. 
+
+Also all of these projects are in relative infancy so things are always changing. This makes a guide like this a bit difficult to keep up to date and in sync. We highly recommend you dig into [Google Cloud Documentation](https://cloud.google.com/docs/) specifically the Google [Compute](https://cloud.google.com/compute/) and [Container](https://cloud.google.com/container-engine/) Engine and [networking](https://cloud.google.com/products/networking/) documentation, not to mention [Kubernetes](https://kubernetes.io/) and [Docker](https://www.docker.com/) to get an intution and especially if you hit issues as you go.
+
+We also recommend hitting up the Slack communities ([GCP](https://gcp-slack.appspot.com/), [Kubernetes](http://slack.k8s.io/), [Docker](https://community.docker.com/registrations/groups/4316)) for help or find folks on social media. We have found the community around these projects extremely helpful.
+
 
 In this example we'll use 7 worker nodes with a single master node.
 
@@ -41,6 +48,8 @@ In our controller we've defined 1 replica that has 8 containers. They will all u
       - This is mentioned in Part 1 and is the target host of the endpoint we'll be testing against.
 
 ** NOTE: Below we will walk through updating these parameters for the specific scenario we'll be running.
+
+FYI Kubernetes no longer recommends using [Replication Controllers](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/) and instead now recommends [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/) for managing replication. You need to ensure that your Kubernetes setup supports `apps/v1beta2` for an apiVersion. If Deployments are not yet supported by your Kubernetes setup you can continue to use Replication Controllers.
 
 #### Master Service
 
@@ -70,6 +79,10 @@ It has 3 enviornment variables it will use:
 Now that we know what the 3 files are we can tweak them for our use case and start the deployment process.
 
 ### Deploy Controllers and Services
+
+For the next section we'll be interacting with Google Cloud Platform via their command line interface [gcloud](https://cloud.google.com/sdk/gcloud/). Ensure you have the tools installed or install them via the linked documentation if not.
+
+Also ensure your tools are authenticated against the Google Cloud Project that you wish to deploy our cluster into (you can verify by running `kubectl get pods`). This does NOT have to be the same cloud project that your run your services that will be hitting. However in the case of this guide we will assume the same cloud project. To login you can use `gcloud auth login`. Documentation [here](https://cloud.google.com/sdk/gcloud/reference/auth/login).
 
 #### Configure the Controller Hosts
 
@@ -161,9 +174,11 @@ Now let's look at our clusters by issuing the following command:
 
 Now you should see your locust-cluster. And if you created the example-cluster earlier it should also be listed.
 
-After a few minutes, you'll have a working Kubernetes cluster with three nodes (not counting the Kubernetes master). 
+After a few minutes, you'll have a working Kubernetes cluster with three nodes (not counting the Kubernetes master). This gives us our GCP VMs that will be the hosts for our kubernetes pods that we'll deploy next.
 
-Now we're going to get ready to deploy our nodes. But first we need to ensure our `kubectl` command is pointing at our cluster. If you run the following command you should see a list of contexts: 
+Now we're going to get ready to deploy our nodes. This is where we start to interact with Kubernetes more directly via [kubectl](https://kubernetes.io/docs/user-guide/kubectl-overview/). We will be using some simple kubectl commands in this guide. I highly recommend you dig through the documentation to see what all is available. There are many commands for updating or inspecting services. Here is a [kubectl cheat sheet](https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/) for some of the most common commands. 
+
+Now let's deploy some pods. First we need to ensure our `kubectl` command is pointing at our cluster. If you run the following command you should see a list of contexts: 
 
     $ kubectl config get-clusters
 
@@ -274,11 +289,13 @@ And now you can run your tests. In our case here:
 
 ### Managing
 
+We recommend that you start with a single user test to verify that everything is working before attempting to throw serious load at your app. You can use many of the commands for interacting with the pods, nodes, clusters from the [cheatsheet](https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/) to inspect your cluster if any issues are arising. Tailing the logs (`kubectl logs -f my-pod` or `kubectl logs -f my-pod -c my-container`) is often the quickest way to see if any issues are arising.
+
 For more information on managing Container Engine clusters visit the following documentation: https://kubernetes.io/docs/user-guide/managing-deployments/
 
 ### Deployment Cleanup
 
-Once you have run your tests you will want to cleanup your locust cluster to avoid accuring costs. To teardown the workload simulation cluster, use the following steps. First, delete the Kubernetes cluster:
+Once you have run your tests you will want to cleanup your locust cluster to avoid accruing costs. To tear down the workload simulation cluster, use the following steps. First, delete the Kubernetes cluster:
 
     $ gcloud container clusters delete locust-cluster
 
