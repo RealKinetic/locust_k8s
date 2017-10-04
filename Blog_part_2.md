@@ -329,7 +329,7 @@ Then take the example name and set it as default:
 
 Please don't forget to clean your resources up when you are done! Nobody likes seeing that shocking end of the month bill.
 
-# The End
+## The End
 
 That concludes our walk-through of using Locust in distributed mode on Kubernetes and Google Container Engine. If you'd like to dig deeper into Kubernetes and really understand how it works then I highly recommend [Kelsey Hightower's](https://twitter.com/kelseyhightower) great [Kubernetes the Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way).
 
