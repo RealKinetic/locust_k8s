@@ -335,4 +335,4 @@ That concludes our walk-through of using Locust in distributed mode on Kubernete
 
 Also if you or your company are looking for help with Google Cloud, Kubernetes or just some help shipping a product then please reach out to us at [Real Kinetic](https://realkinetic.com/). You can email us at: [contact@realkinetic.com](mailto:contact@realkinetic.com) or hit up our website and fill out the form there: [realkinetic.com](https://realkinetic.com/contact). You can also find us on Twitter: [@real_kinetic](https://twitter.com/real_kinetic) and [LinkedIn](https://www.linkedin.com/company-beta/18004482/). You can also find me on twitter: [@lyddonb](https://twitter.com/lyddonb).
 
-The code for this tutorial can be found on github: https://github.com/RealKinetic/locust_k8s
+The code for this tutorial can be found on github: https://github.com/RealKinetic/locust_k8s/tree/part-2
