@@ -326,3 +326,13 @@ You can use these same steps to cleanup your example app as well. You may need t
 Then take the example name and set it as default:
 
     $ kubectl config use-context CONTEXT-NAME
+
+Please don't forget to clean your resources up when you are done! Nobody likes seeing that shocking end of the month bill.
+
+# The End
+
+That concludes our walk-through of using Locust in distributed mode on Kubernetes and Google Container Engine. If you'd like to dig deeper into Kubernetes and really understand how it works then I highly recommend [Kelsey Hightower's](https://twitter.com/kelseyhightower) great [Kubernetes the Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way).
+
+Also if you or your company are looking for help with Google Cloud, Kubernetes or just some help shipping a product then please reach out to us at [Real Kinetic](https://realkinetic.com/). You can email us at: [contact@realkinetic.com](mailto:contact@realkinetic.com) or hit up our website and fill out the form there: [realkinetic.com](https://realkinetic.com/contact). You can also find us on Twitter: [@real_kinetic](https://twitter.com/real_kinetic) and [LinkedIn](https://www.linkedin.com/company-beta/18004482/). You can also find me on twitter: [@lyddonb](https://twitter.com/lyddonb).
+
+The code for this tutorial can be found on github: https://github.com/RealKinetic/locust_k8s
