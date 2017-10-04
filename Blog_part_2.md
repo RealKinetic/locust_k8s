@@ -137,7 +137,7 @@ And you should see an output like so:
     account = email.address@somedomain.com
     project = your-google-cloud-project-id
 
-I recommend setting both your project and compute zone. You can find the directions for both in the Google Cloud Tools Documentation.
+I recommend setting both your project and compute zone. You can find the directions for both in the [Google Cloud Tools Documentation](https://cloud.google.com/compute/docs/regions-zones/changing-default-zone-region).
 
 Now let's take a look at the type of machines we can run our container nodes on. Run the following command to get a list:
 
@@ -178,7 +178,11 @@ After a few minutes, you'll have a working Kubernetes cluster with three nodes (
 
 Now we're going to get ready to deploy our nodes. This is where we start to interact with Kubernetes more directly via [kubectl](https://kubernetes.io/docs/user-guide/kubectl-overview/). We will be using some simple kubectl commands in this guide. I highly recommend you dig through the documentation to see what all is available. There are many commands for updating or inspecting services. Here is a [kubectl cheat sheet](https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/) for some of the most common commands. 
 
-Now let's deploy some pods. First we need to ensure our `kubectl` command is pointing at our cluster. If you run the following command you should see a list of contexts: 
+Now let's deploy some pods. First let's get our [credentials setup](https://cloud.google.com/sdk/gcloud/reference/container/clusters/get-credentials) for working with the cluster.
+
+    $ gcloud container clusters get-credentials locust-cluster
+
+Then we need to ensure our `kubectl` command is pointing at our cluster. If you run the following command you should see a list of contexts: 
 
     $ kubectl config get-clusters
 
