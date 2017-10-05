@@ -11,22 +11,21 @@ Locust distributed mode allows you to concurrently run your locustfiles on multi
 
     A common set up is to run a single master on one machine, and then run one slave instance per processor core, on the slave machines.
 
-This design ends up fitting well with Kubernetes and Google Container Engine. We can create a single master node and then as many worker nodes as we deem necessary. The nice thing with Kubernetes is we can spin up and down the number of nodes as we go. All we need to do is create a few configuration files, walk through a couple of steps, and then we'll be running with as many machines as we'd like.
+This design fits well with Kubernetes and Google Container Engine. We can create a single master node and then as many worker nodes as we deem necessary. The nice thing about using Kubernetes is that we change the number of nodes at run-time. To run on GKE, we only need to create a few configuration files, walk through a couple of setup steps, and then we'll be running with as many machines as we'd like.
 
 ## Distributed Locust on Google Container Engine
 
-A few notes on GKE and Kubernetes. Between GKE, Kubernetes and Docker we have three ecosystems that we are integrating here. Not only that but Docker is platform agnostic and is building it's own runtime eco-system outside of Kubernetes. Kubernetes while started within Google is a true open source project that is not only attempting to be platform agnostic so it can run in any environment but is also container agnostic. So it supports other container types beyond Docker. There are real positives in these designs as they allow us to plugin the pieces that make the most sense for our use case. However the negative is the APIs and documentation can be difficult. Some commands that appear to be Kubernetes specific will trigger downstream GKE side effects. You can end up with some weird bash commands where you're nesting commands down to docker via Kubernetes. 
+First, a few notes on GKE and Kubernetes. Between GKE, Kubernetes and Docker we are integrating three distinct ecosystems. Additionally, Docker is platform agnostic *and* is building their own runtime eco-system outside of Kubernetes. Kubernetes, while started within Google, is a true open source project that is attempting to be platform agnostic (so it can run in any environment) and is also *container* agnostic. In other words, Kubernetes supports container types beyond Docker. These designs allow us to plugin the pieces that make the most sense for our use case. However, the negative is that understanding the APIs and documentation can be difficult. Some commands that appear to be Kubernetes specific will trigger side effects on GKE. The end result is that some bash commands are nesting commands to be passed through to docker via Kubernetes. 
 
-Also all of these projects are in relative infancy so things are always changing. This makes a guide like this a bit difficult to keep up to date and in sync. We highly recommend you dig into [Google Cloud Documentation](https://cloud.google.com/docs/) specifically the Google [Compute](https://cloud.google.com/compute/) and [Container](https://cloud.google.com/container-engine/) Engine and [networking](https://cloud.google.com/products/networking/) documentation, not to mention [Kubernetes](https://kubernetes.io/) and [Docker](https://www.docker.com/) to get an intution and especially if you hit issues as you go.
+Also, all of these projects are in relative infancy and constantly evolving. This makes a guide like this difficult to keep up to date. We highly recommend you review the [Google Cloud Documentation](https://cloud.google.com/docs/), specifically the Google [Compute Engine](https://cloud.google.com/compute/), [Container Engine](https://cloud.google.com/container-engine/), and [Cloud Networking](https://cloud.google.com/products/networking/) documentation, in addition to the [Kubernetes](https://kubernetes.io/) and [Docker](https://www.docker.com/) documentation to get an intuition and *especially* if you hit issues as you go through the tutorial.
 
-We also recommend hitting up the Slack communities ([GCP](https://gcp-slack.appspot.com/), [Kubernetes](http://slack.k8s.io/), [Docker](https://community.docker.com/registrations/groups/4316)) for help or find folks on social media. We have found the community around these projects extremely helpful.
+We also recommend hitting up the Slack communities ([GCP](https://gcp-slack.appspot.com/), [Kubernetes](http://slack.k8s.io/), [Docker](https://community.docker.com/registrations/groups/4316)) for help. We have found the communities around each of these projects extremely helpful.
 
-
-In this example we'll use 7 worker nodes with a single master node.
+Now, let's get started. In this example we'll use 7 worker nodes with a single master node.
 
 ### Configuration Files
 
-The configurations for our master, service definition and workers are in [kubernetes-config](https://github.com/RealKinetic/locust_k8s/tree/part-2/kubernetes-config). You should see the following files in that directory:
+The configurations for our master, service definition, and workers are in [kubernetes-config](https://github.com/RealKinetic/locust_k8s/tree/part-2/kubernetes-config). You should see the following files in that directory:
 
   - [locust-master-controller.yaml](https://github.com/RealKinetic/locust_k8s/blob/part-2/kubernetes-config/locust-master-controller.yaml)
   - [locust-master-service.yaml](https://github.com/RealKinetic/locust_k8s/blob/part-2/kubernetes-config/locust-master-service.yaml)
@@ -47,13 +46,13 @@ In our controller we've defined 1 replica that has 8 containers. They will all u
     - TARGET_HOST
       - This is mentioned in Part 1 and is the target host of the endpoint we'll be testing against.
 
-** NOTE: Below we will walk through updating these parameters for the specific scenario we'll be running.
+**NOTE:** Below we will walk through updating these parameters for the specific scenario we'll be running.
 
-FYI Kubernetes no longer recommends using [Replication Controllers](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/) and instead now recommends [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/) for managing replication. You need to ensure that your Kubernetes setup supports `apps/v1beta2` for an apiVersion. If Deployments are not yet supported by your Kubernetes setup you can continue to use Replication Controllers.
+**NOTE:** Kubernetes no longer recommends using [Replication Controllers](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/) and instead now recommends [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) for managing replication. To use Deployments, you need to ensure that your Kubernetes setup supports apiVersion `apps/v1beta2`. If Deployments are not yet supported by your Kubernetes setup you can continue to use Replication Controllers.
 
 #### Master Service
 
-The next file is the master service file (locust-master-service.yaml). It defines a [Kubernetes Service](https://kubernetes.io/docs/concepts/services-networking/service/). What are services? Once again from the Kubernetes documentation:
+The next file is the master service file ([locust-master-service.yaml](https://github.com/RealKinetic/locust_k8s/blob/part-2/kubernetes-config/locust-master-service.yaml)). It defines a [Kubernetes Service](https://kubernetes.io/docs/concepts/services-networking/service/). What are services? Once again from the Kubernetes documentation:
 
     Kubernetes Pods are mortal. They are born and when they die, they are not resurrected. ReplicationControllers in particular create and destroy Pods dynamically (e.g. when scaling up or down or when doing rolling updates). While each Pod gets its own IP address, even those IP addresses cannot be relied upon to be stable over time. This leads to a problem: if some set of Pods (let’s call them backends) provides functionality to other Pods (let’s call them frontends) inside the Kubernetes cluster, how do those frontends find out and keep track of which backends are in that set?
 
@@ -61,13 +60,13 @@ The next file is the master service file (locust-master-service.yaml). It define
 
     A Kubernetes Service is an abstraction which defines a logical set of Pods and a policy by which to access them - sometimes called a micro-service. The set of Pods targeted by a Service is (usually) determined by a Label Selector (see below for why you might want a Service without a selector).
 
-In our case our service is Master Load Balancer that is exposing ports on the 8 pods it's managing.
+In our case our service is `Master Load Balancer` that is exposing ports on the 8 pods it's managing.
 
 #### Worker Controller (Replication Controller)
 
-The last file is the worker controller (locust-worker-controller.yaml). Like our master controller the worker controller is also a ReplicationController. In this case though it's role is a worker. We have configured 10 replicas for this configuration. That number can be set to whatever you'd like but can also be modified on demand. We will show an example of that below. Also note this controller does use the same image again.
+The last file is the worker controller (locust-worker-controller.yaml). Like our master controller the worker controller is also a `ReplicationController`. In this case though it's role is a worker. We have configured 7 replicas for this configuration. That number can be set to whatever you'd like but can also be modified on demand. We will show an example of that below. Also note this controller uses the same image again.
 
-It has 3 enviornment variables it will use:
+There are 3 environment variables used to configure the worker nodes:
 
     - LOCUST_MODE:
       - Similar to the master but in this case it's `worker`
@@ -76,17 +75,17 @@ It has 3 enviornment variables it will use:
     - TARGET_HOST:
       - The same target host again
 
-Now that we know what the 3 files are we can tweak them for our use case and start the deployment process.
+Now that we've walked through the 3 configuration files, we can tweak them for our use case and start the deployment process.
 
 ### Deploy Controllers and Services
 
-For the next section we'll be interacting with Google Cloud Platform via their command line interface [gcloud](https://cloud.google.com/sdk/gcloud/). Ensure you have the tools installed or install them via the linked documentation if not.
+For the next section we'll be interacting with Google Cloud Platform via their command line interface [gcloud](https://cloud.google.com/sdk/gcloud/). Ensure you have the tools installed or follow their [install](https://cloud.google.com/sdk/downloads) documentation if not.
 
-Also ensure your tools are authenticated against the Google Cloud Project that you wish to deploy our cluster into (you can verify by running `kubectl get pods`). This does NOT have to be the same cloud project that your run your services that will be hitting. However in the case of this guide we will assume the same cloud project. To login you can use `gcloud auth login`. Documentation [here](https://cloud.google.com/sdk/gcloud/reference/auth/login).
+Also, ensure your tools are authenticated against the Google Cloud Project that you wish to deploy the cluster into (you can verify the project by running `kubectl get pods`). This does *NOT* have to be the same cloud project running your service-under-test. For simplicity, this guide we will assume they are running in the same cloud project. To [login](https://cloud.google.com/sdk/gcloud/reference/auth/login) you can use `gcloud auth login`.
 
 #### Configure the Controller Hosts
 
-Before deploying the `locust-master` and `locust-worker` controllers, update each to point to the location of your deployed sample web application. Set the `TARGET_HOST` environment variable found in the `locust-master-controller` and `locust-worker-controller` spec entires to the web application URL. For this example it will be the same EXTERNAL-IP as we used above. Also ensure to add the port.
+Before deploying the `locust-master` and `locust-worker` controllers, update each to point to the location of your deployed sample web application. Set the `TARGET_HOST` environment variable found in the `locust-master-controller` and `locust-worker-controller` spec entires to the web application URL. For this example it will be the same EXTERNAL-IP as we used above. Be sure to include the port.
 
     - name: TARGET_HOST
       key: TARGET_HOST
@@ -94,18 +93,24 @@ Before deploying the `locust-master` and `locust-worker` controllers, update eac
 
 #### Configure the Controller Docker Image
 
-Now we need to tag our existing Locust Docker Image so we can deploy it to Google Image Repository. If you do not already have an image created please go to the top of this guide and follow those directions. Also ensure that you have a Google Cloud Project available to use. If you do not follow the "Before you begin" instructions from the [Google Container Engine Quick Start](https://cloud.google.com/container-engine/docs/quickstart). Once you have a Google Cloud Project setup replace PROJECT-ID throughout the rest of this guide with your Google Cloud Project Id.
+Now we need to tag our existing Locust Docker Image so we can deploy it to Google Image Repository. If you do not already have an image created, go to [Part 1](https://blog.realkinetic.com/load-testing-with-locust-part-1-174040afdf23) of this tutorial and follow [those directions](https://blog.realkinetic.com/load-testing-with-locust-part-1-174040afdf23#7a17). If you did not follow the "Before you begin" instructions from the [Google Container Engine Quick Start](https://cloud.google.com/container-engine/docs/quickstart), ensure you have a Google Cloud Project available to use. Once you have a Google Cloud Project setup, replace PROJECT-ID throughout the rest of this guide with your Google Cloud Project Id.
 
-    $ docker tag locust-tasks gcr.io/PROJECT-ID/locust-tasks
-    $ gcloud docker -- push gcr.io/PROJECT-ID/locust-tasks
+To help with this, you may run the following:
+
+    $ export PROJECTID=<YOUR CLOUD PROJECT-ID>
+
+Be sure to replace `<YOUR CLOUD PROJECT-ID>` with your cloud project's id.
+
+    $ docker tag locust-tasks gcr.io/$PROJECTID/locust-tasks
+    $ gcloud docker -- push gcr.io/$PROJECTID/locust-tasks
 
 **Note:** you are not required to use the Google Container Registry. If you'd like to publish your images to the [Docker Hub](https://hub.docker.com) please refer to the steps in [Working with Docker Hub](https://docs.docker.com/userguide/dockerrepos/).
 
-Once the Docker image has been rebuilt and uploaded to the registry you will need to edit the controllers with your new image location. Specifically, the `spec.template.spec.containers.image` field in each controller controls which Docker image to use.
+Once the Docker image has been rebuilt and uploaded to the registry you will need to update the controllers with your new image location. The `spec.template.spec.containers.image` field in each controller controls which Docker image to use.
 
 If you uploaded your Docker image to the Google Container Registry:
 
-    image: gcr.io/PROJECT-ID/locust-tasks:latest
+    image: gcr.io/$PROJECTID/locust-tasks:latest
 
 If you uploaded your Docker image to the Docker Hub:
 
@@ -123,7 +128,7 @@ First create the [Google Container Engine](http://cloud.google.com/container-eng
 
 If you do not have a default Google Cloud Project Id set you can append the `--project=` argument to all of your gcloud commands like so:
 
-    $ gcloud container clusters create CLUSTER-NAME --project=PROJECT-ID
+    $ gcloud container clusters create CLUSTER-NAME --project=$PROJECTID
 
 If you do not know if you have a project set run the following command:
 
@@ -145,17 +150,17 @@ Now let's take a look at the type of machines we can run our container nodes on.
 
 You can also visit the [Google Compute Machine Type Documenation](https://cloud.google.com/compute/docs/machine-types) to learn more.
 
-In our case we're going to use some higher cpu machines as CPU is often the limiting factor when running locust. The command below uses the `n1-highcpu-8` machine type. This is a High-CPU machine type with 8 virtual CPUs and 7.20 GB of memory. Obviously the more powerful machines you use the more expensive they are. Please use what is comfortable for you. Just note that if you notice the locust system hitting failures you may need to either increase the CPU or Memory of your machines or add more machines.
+In our case we're going to use some higher cpu machines as CPU is often the limiting factor when running locust. The command below uses the `n1-highcpu-8` machine type. This is a High-CPU machine type with 8 virtual CPUs and 7.20 GB of memory. Obviously the more powerful machines you use the more expensive they are - use whatever is comfortable for you. Note that if the locust system starts hitting failures, you may need to increase the CPU or Memory of your machines, or add more machines.
 
-Since we have 7 workers nodes with 1 controller we need to let container engine know by passing in the `--num-nodes` parameter with a value of 8 in our case. The command looks like so:
+Since we have 7 worker nodes, with 1 controller, we need to let container engine know by passing in the `--num-nodes` parameter with a value of 8 in our case. The command looks like so:
 
     $ gcloud container clusters create CLUSTER-NAME --machine-type=n1-highcpu-8 --num-nodes=8
 
-Let's call our cluster here `locust-cluster` so the exact command we will run is:
+Let's call our cluster `locust-cluster`. The exact command we will run is:
 
     $ gcloud container clusters create locust-cluster --machine-type=n1-highcpu-8 --num-nodes=8
 
-Now let's make the cluster our default cluster in this project by adding it to our gcloud config with the following comand:
+Now, let's make the cluster our default cluster in this project by adding it to our gcloud config with the following command:
 
     $ gcloud config set container/cluster locust-cluster
 
@@ -164,29 +169,29 @@ You can run `gcloud config list` again to confirm the following entry:
     [container]
     cluster = locust-cluster
 
-Get credential for your cluster.
+Get the credentials for your cluster.
 
     $ gcloud container clusters get-credentials locust-cluster
 
-Now let's look at our clusters by issuing the following command:
+List your clusters by issuing the following command:
 
     $ gcloud container clusters list
 
-Now you should see your locust-cluster. And if you created the example-cluster earlier it should also be listed.
+You should see your newly created locust-cluster. If you created the example-cluster from [Part 1](https://blog.realkinetic.com/load-testing-with-locust-part-1-174040afdf23) it should also be listed.
 
-After a few minutes, you'll have a working Kubernetes cluster with three nodes (not counting the Kubernetes master). This gives us our GCP VMs that will be the hosts for our kubernetes pods that we'll deploy next.
+After a few minutes, you'll have a working Kubernetes cluster with three nodes (not counting the Kubernetes master). This provisions our GCP VMs that will serve as the hosts for our Kubernetes pods that we'll deploy next.
 
-Now we're going to get ready to deploy our nodes. This is where we start to interact with Kubernetes more directly via [kubectl](https://kubernetes.io/docs/user-guide/kubectl-overview/). We will be using some simple kubectl commands in this guide. I highly recommend you dig through the documentation to see what all is available. There are many commands for updating or inspecting services. Here is a [kubectl cheat sheet](https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/) for some of the most common commands. 
+Next we will get ready to deploy our nodes. We will now interact with Kubernetes more directly via [kubectl](https://kubernetes.io/docs/user-guide/kubectl-overview/). We will be using some simple kubectl commands in this guide, but I highly recommend reading the documentation to see what is available. There are many commands for updating and inspecting services. Here is a [kubectl cheat sheet](https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/) for some of the most common commands. 
 
-Now let's deploy some pods. First let's get our [credentials setup](https://cloud.google.com/sdk/gcloud/reference/container/clusters/get-credentials) for working with the cluster.
+Now it is time to deploy our pods. First setup our [credentials](https://cloud.google.com/sdk/gcloud/reference/container/clusters/get-credentials) for working with the cluster.
 
     $ gcloud container clusters get-credentials locust-cluster
 
-Then we need to ensure our `kubectl` command is pointing at our cluster. If you run the following command you should see a list of contexts: 
+Next, ensure the `kubectl` command is pointing at your cluster. If you run the following command you should see a list of contexts: 
 
     $ kubectl config get-clusters
 
-Ideally you will see something like `gke_PROJECT-ID_us-central1-a_locust-cluster` and next to it will have an asterix `*` to signify that it is your default context. If it is not you will want to run the following command.
+Ideally you will see something like `gke_PROJECT-ID_us-central1-a_locust-cluster` with an asterisk `*` to signify that it is your default context. If it is not your default, run the following command.
 
     $ kubectl config use-context gke_PROJECT-ID_ZONE_CLUSTER-NAME
 
@@ -196,15 +201,15 @@ Once again verify with:
 
 #### Deploy locust-master
 
-Now that `kubectl` is setup, we're going to deploy the `locust-master-controller` by issuing a create command pointed at our master controller yaml file:
+Now that `kubectl` is setup, we're going to deploy the `locust-master-controller` by issuing a create command pointed at the master controller yaml file:
 
     $ kubectl create -f kubernetes-config/locust-master-controller.yaml
 
-To confirm that the Replication Controller and Pod are created, run the following:
+To confirm the Replication Controller and Pod were created, run the following:
 
     $ kubectl get rc
 
-This should output something like:
+The output should look something like:
 
     NAME            DESIRED   CURRENT   READY     AGE
     locust-master   1         1         1         41s
@@ -218,29 +223,29 @@ Which will output:
     NAME                  READY     STATUS    RESTARTS   AGE
     locust-master-ltg5k   1/1       Running   0          1m
 
-If all is running we can then deploy the `locust-master-service`:
+Next, deploy the `locust-master-service`:
 
     $ kubectl create -f kubernetes-config/locust-master-service.yaml
 
-To check the services status run:
+To check the service status run:
 
     $ kubectl get svc
 
-This step will expose the Pod with an internal DNS name (`locust-master`) and ports `8089`, `5557` - `5563`. As part of this step, the `type: LoadBalancer` directive in `locust-master-service.yaml` will tell Google Container Engine to create a Google Compute Engine forwarding-rule from a publicly avaialble IP address to the `locust-master` Pod. To view the newly created forwarding-rule, execute the following:
+This step will expose the Pod with an internal DNS name (`locust-master`) and ports `8089`, `5557` - `5563`. As part of this step, the `type: LoadBalancer` directive in `locust-master-service.yaml` instructs Google Container Engine to create a Google Compute Engine forwarding-rule from a publicly available IP address to the `locust-master` Pod. To view the newly created forwarding-rule, execute the following:
 
     $ gcloud compute forwarding-rules list 
 
 #### Deploy locust-worker
 
-Next up is our workers. We will deploy `locust-worker-controller` with the following:
+Next up is deploying our workers. We will deploy `locust-worker-controller` with the following:
 
     $ kubectl create -f kubernetes-config/locust-worker-controller.yaml
 
-The `locust-worker-controller` is set to deploy 10 `locust-worker` Pods, to confirm they were deployed run the following:
+The `locust-worker-controller` is set to deploy 7 `locust-worker` Pods, to confirm they were deployed run the following:
 
     $ kubectl get pods -l name=locust,role=worker
 
-You should see an output like so:
+You should see output similar to:
 
     NAME                  READY     STATUS    RESTARTS   AGE
     locust-worker-07m8v   1/1       Running   0          29s
@@ -260,7 +265,7 @@ To confirm that the Pods have launched and are ready, get the list of `locust-wo
 
 #### Setup Firewall Rules
 
-The final step in deploying these controllers and services is to allow traffic from your publicly accessible forwarding-rule IP address to the appropriate Container Engine instances. However your firewall rules should be added by default. However if they are not you can use this section to get them setup. If they are setup you can skip to the execution stage. To verify run the following:
+The final step in deploying these controllers and services is to allow traffic from your publicly accessible forwarding-rule IP address to the appropriate Container Engine instances. The firewall rules *should* be added by default. However, if they were not you can use this section as a setup guide. If they are setup you can skip to the execution stage. To verify run the following:
 
     $ gcloud compute firewall-rules list
 
@@ -280,7 +285,7 @@ If you do not see locust items listed then create the firewall rule, execute the
 
 ### Execute Tests
 
-To execute the Locust tests, navigate to the IP address of your forwarding-rule (see above) and port `8089` and enter the number of clients to spawn and the client hatch rate then start the simulation.
+To execute the Locust tests, open the IP address of your forwarding-rule (see above) and port `8089` in your browser. Next enter the number of clients to spawn, the client hatch rate, and finally start the simulation.
 
 You can run `kubectl get services` to view your service which will have the EXTERNAL-IP Address listed with it:
 
@@ -293,7 +298,7 @@ And now you can run your tests. In our case here:
 
 ### Managing
 
-We recommend that you start with a single user test to verify that everything is working before attempting to throw serious load at your app. You can use many of the commands for interacting with the pods, nodes, clusters from the [cheatsheet](https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/) to inspect your cluster if any issues are arising. Tailing the logs (`kubectl logs -f my-pod` or `kubectl logs -f my-pod -c my-container`) is often the quickest way to see if any issues are arising.
+We recommend you start with a single user test to verify the system is working correctly before attempting to throw serious load at your app. You can use many of the commands for interacting with the pods, nodes, clusters from the [cheatsheet](https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/) to inspect your cluster if any issues are arising. Tailing the logs (`kubectl logs -f my-pod` or `kubectl logs -f my-pod -c my-container`) is often the quickest way to see if any issues are arising.
 
 For more information on managing Container Engine clusters visit the following documentation: https://kubernetes.io/docs/user-guide/managing-deployments/
 
