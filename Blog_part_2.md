@@ -285,30 +285,28 @@ If you do not see locust items listed then create the firewall rule, execute the
 
 ### Execute Tests
 
-To execute the Locust tests, open the IP address of your forwarding-rule (see above) and port `8089` in your browser. Next enter the number of clients to spawn, the client hatch rate, and finally start the simulation.
+To execute the Locust tests, open the IP address of your forwarding-rule (see above) on port `8089` in your browser. Next enter the number of clients to spawn, the client hatch rate, and finally start the simulation.
 
 You can run `kubectl get services` to view your service which will have the EXTERNAL-IP Address listed with it:
 
     NAME            CLUSTER-IP      EXTERNAL-IP     PORT(S)                                                                                                                   AGE
     locust-master   10.19.251.225   35.193.138.78   8089:30218/TCP,5557:30894/TCP,5558:32095/TCP,5559:32301/TCP,5560:30602/TCP,5561:30879/TCP,5562:30160/TCP,5563:31944/TCP   10m
 
-And now you can run your tests. In our case here:
-
-    $ open http://35.193.138.78:8089/
+And now you can run your tests. My external IP is `35.193.138.78`, so I would visit open `http://35.193.138.78:8089/` in my browser.
 
 ### Managing
 
-We recommend you start with a single user test to verify the system is working correctly before attempting to throw serious load at your app. You can use many of the commands for interacting with the pods, nodes, clusters from the [cheatsheet](https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/) to inspect your cluster if any issues are arising. Tailing the logs (`kubectl logs -f my-pod` or `kubectl logs -f my-pod -c my-container`) is often the quickest way to see if any issues are arising.
+We recommend you start with a single user test to verify the system is working correctly before attempting to run larger or more complex scenarios. The most common commands for interacting with pods, nodes, and clusters are found on the [cheatsheet](https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/). There are commands for inspecting your cluster if you encounter any issues. Tailing the logs (`kubectl logs -f my-pod` or `kubectl logs -f my-pod -c my-container`) is often the quickest way to see if any issues are arising.
 
-For more information on managing Container Engine clusters visit the following documentation: https://kubernetes.io/docs/user-guide/managing-deployments/
+For more information on managing Container Engine clusters, visit the Kubernetes [Resource Management](https://kubernetes.io/docs/user-guide/managing-deployments/) documentation.
 
 ### Deployment Cleanup
 
-Once you have run your tests you will want to cleanup your locust cluster to avoid accruing costs. To tear down the workload simulation cluster, use the following steps. First, delete the Kubernetes cluster:
+Once you have run your tests be sure to cleanup your locust cluster to avoid accruing unnecessary costs. To tear down the workload simulation cluster, use the following steps. First, delete the Locust Kubernetes cluster:
 
     $ gcloud container clusters delete locust-cluster
 
-Next, delete the forwarding rule that forwards traffic into the cluster. To find your forwarding rule run:
+Next, delete the forwarding rule that forwards traffic into the cluster. To find the forwarding rule, run:
 
     $ gcloud compute forwarding-rules list
 
@@ -316,15 +314,15 @@ You should see a rule that has your IP_ADDRESS. Copy the name for that entry and
 
     $ gcloud compute forwarding-rules delete FORWARDING-RULE-NAME
 
-Finally, delete the firewall rule that allows incoming traffic to the cluster. Similar to the forwarding rules first list the firewall rules:
+Finally, delete the firewall rule that allows incoming traffic to the cluster. Similar to the forwarding rules, first list the firewall rules:
 
     $ gcloud compute firewall-rules list
 
-Then use the names for any firewall rules that have locust in the name with the following command:
+Then use the names for any firewall rules containing locust in the name with the following command:
 
     $ gcloud compute firewall-rules delete FIREWALL-RULE-NAME
 
-You can use these same steps to cleanup your example app as well. You may need to update your default context first. You can switch it by listing the clusters:
+You can use these same steps to cleanup the example service as well. You may need to update your default context first. You can switch it by listing the clusters:
 
     $ kubectl config get-clusters
 
@@ -332,12 +330,12 @@ Then take the example name and set it as default:
 
     $ kubectl config use-context CONTEXT-NAME
 
-Please don't forget to clean your resources up when you are done! Nobody likes seeing that shocking end of the month bill.
+**NOTE:** Please don't forget to clean your resources up! Nobody likes seeing a shocking bill at the end of the month.
 
 ## The End
 
-That concludes our walk-through of using Locust in distributed mode on Kubernetes and Google Container Engine. If you'd like to dig deeper into Kubernetes and really understand how it works then I highly recommend [Kelsey Hightower's](https://twitter.com/kelseyhightower) great [Kubernetes the Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way).
+That concludes our walk-through of running Locust in distributed mode with Kubernetes and deployed to Google Container Engine. If you'd like to dig deeper into Kubernetes and really understand how it works, then I highly recommend [Kelsey Hightower's](https://twitter.com/kelseyhightower) [Kubernetes the Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way).
 
-Also if you or your company are looking for help with Google Cloud, Kubernetes or just some help shipping a product then please reach out to us at [Real Kinetic](https://realkinetic.com/). You can email us at: [contact@realkinetic.com](mailto:contact@realkinetic.com) or hit up our website and fill out the form there: [realkinetic.com](https://realkinetic.com/contact). You can also find us on Twitter: [@real_kinetic](https://twitter.com/real_kinetic) and [LinkedIn](https://www.linkedin.com/company-beta/18004482/). You can also find me on twitter: [@lyddonb](https://twitter.com/lyddonb).
+If you or your company are looking for help using Google Cloud Platform, Kubernetes, or need help shipping a product, then [contact us](https://realkinetic.com/contact). You can also find us on Twitter: [@real_kinetic](https://twitter.com/real_kinetic) and [LinkedIn](https://www.linkedin.com/company/18004482/). You can also find me on twitter: [@lyddonb](https://twitter.com/lyddonb).
 
-The code for this tutorial can be found on github: https://github.com/RealKinetic/locust_k8s/tree/part-2
+The [code for this tutorial](https://github.com/RealKinetic/locust_k8s/tree/part-2) can be found on our [GitHub](https://github.com/RealKinetic).
